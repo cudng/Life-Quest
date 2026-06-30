@@ -6,8 +6,6 @@ import { XpBar } from '@/components/XpBar'
 import { DailyQuests } from '@/components/DailyQuests'
 import { RecentAchievements } from '@/components/RecentAchievements'
 import { Teasers } from '@/components/Teasers'
-import { useAchievementSync } from '@/data/useAchievementSync'
-import { fireConfetti } from '@/lib/reward'
 import { localToday } from '@/lib/date'
 
 export const Route = createFileRoute('/')({
@@ -17,11 +15,6 @@ export const Route = createFileRoute('/')({
 function Index() {
     const { snapshot, isLoading, isError, error } = useProgress()
     const milestones = useMilestones()
-
-    // Persist any newly-earned achievements and celebrate them. Safe to call
-    // with an undefined snapshot (it no-ops until data loads), so it stays above
-    // the early returns to keep hook order stable.
-    useAchievementSync(snapshot, fireConfetti)
 
     if (isLoading) {
         return <div className="p-6 text-muted-foreground">Loading…</div>

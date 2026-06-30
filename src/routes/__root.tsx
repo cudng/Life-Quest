@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { useSession } from '@/auth/session'
 import { useIsAdmin } from '@/auth/useIsAdmin'
 import { signOut } from '@/auth/auth'
+import { RewardsLayer } from '@/components/rewards/RewardsLayer'
 
 const AuthStatus = () => {
     const session = useSession()
@@ -52,6 +53,7 @@ const RootLayout = () => (
         </div>
         <hr />
         <Outlet />
+        <RewardsLayer />
         <TanStackRouterDevtools />
     </>
 )

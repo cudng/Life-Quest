@@ -135,7 +135,7 @@ export function AddMilestoneForm({
                         type="checkbox"
                         checked={prerequisites.includes(m.id)}
                         onChange={() => togglePrereq(m.id)}
-                        className="size-4 accent-[var(--primary)]"
+                        className="size-4 accent-primary"
                       />
                       <span className="text-sm text-foreground">{m.title}</span>
                     </label>

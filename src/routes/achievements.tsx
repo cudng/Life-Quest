@@ -1,9 +1,72 @@
-import {createFileRoute} from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { ACHIEVEMENTS } from '@/data/achievements'
+import { useAchievementsUnlocked } from '@/data/queries'
 
 export const Route = createFileRoute('/achievements')({
-    component: RouteComponent,
+    component: Achievements,
 })
 
-function RouteComponent() {
-    return <div>Hello "/achievements"!</div>
+function Achievements() {
+    const unlocked = useAchievementsUnlocked()
+
+    if (unlocked.isLoading) {
+        return <div className="p-6 text-muted-foreground">Loading…</div>
+    }
+    if (unlocked.isError) {
+        return (
+            <div className="p-6 text-destructive">
+                Failed to load: {unlocked.error?.message ?? 'unknown error'}
+            </div>
+        )
+    }
+
+    const unlockedAt = new Map(
+        (unlocked.data ?? []).map((r) => [r.id, r.unlocked_at]),
+    )
+    const earnedCount = ACHIEVEMENTS.filter((a) => unlockedAt.has(a.id)).length
+
+    return (
+        <div className="p-6 text-left">
+            <div className="flex items-baseline justify-between">
+                <h1 className="text-lg font-semibold text-foreground">
+                    Achievements
+                </h1>
+                <span className="text-sm text-muted-foreground">
+                    {earnedCount}/{ACHIEVEMENTS.length} earned
+                </span>
+            </div>
+
+            <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {ACHIEVEMENTS.map((a) => {
+                    const earnedOn = unlockedAt.get(a.id)
+                    const earned = earnedOn !== undefined
+                    return (
+                        <li
+                            key={a.id}
+                            className={
+                                earned
+                                    ? 'flex flex-col items-center gap-2 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-bg)] p-5 text-center'
+                                    : 'flex flex-col items-center gap-2 rounded-xl border bg-card p-5 text-center opacity-60'
+                            }
+                        >
+                            <span className="text-4xl">
+                                {earned ? a.icon : '🔒'}
+                            </span>
+                            <span className="font-medium text-foreground">
+                                {a.title}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                                {a.description}
+                            </span>
+                            {earned && (
+                                <span className="mt-1 text-xs text-[var(--accent)]">
+                                    {earnedOn.slice(0, 10)}
+                                </span>
+                            )}
+                        </li>
+                    )
+                })}
+            </ul>
+        </div>
+    )
 }

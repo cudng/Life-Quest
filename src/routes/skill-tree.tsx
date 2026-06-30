@@ -6,9 +6,7 @@ import { buildSkillFlow } from '@/engine/skillTree'
 import { SkillCanvas } from '@/components/skill-tree/SkillCanvas'
 import { SkillDetail } from '@/components/skill-tree/SkillDetail'
 import { AddSkillForm } from '@/components/skill-tree/AddSkillForm'
-import { useAchievementSync } from '@/data/useAchievementSync'
 import { useIsAdmin } from '@/auth/useIsAdmin'
-import { fireConfetti } from '@/lib/reward'
 
 export const Route = createFileRoute('/skill-tree')({
     component: SkillTree,
@@ -17,9 +15,6 @@ export const Route = createFileRoute('/skill-tree')({
 function SkillTree() {
     const { snapshot, isLoading, isError, error } = useProgress()
     const skills = useSkills()
-
-    // Setting mastery here can unlock achievements — celebrate them.
-    useAchievementSync(snapshot, fireConfetti)
 
     const isAdmin = useIsAdmin()
     const [selectedId, setSelectedId] = useState<string | null>(null)

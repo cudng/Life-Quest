@@ -8,9 +8,7 @@ import { MilestoneDetail } from '@/components/roadmap/MilestoneDetail'
 import { AddMilestoneForm } from '@/components/roadmap/AddMilestoneForm'
 import { AddStageForm } from '@/components/roadmap/AddStageForm'
 import { AddTrackForm } from '@/components/roadmap/AddTrackForm'
-import { useAchievementSync } from '@/data/useAchievementSync'
 import { useIsAdmin } from '@/auth/useIsAdmin'
-import { fireConfetti } from '@/lib/reward'
 
 export const Route = createFileRoute('/roadmap')({
     component: Roadmap,
@@ -21,9 +19,6 @@ function Roadmap() {
     const tracks = useTracks()
     const stages = useStages()
     const milestones = useMilestones()
-
-    // Completing a milestone here can unlock achievements — celebrate them.
-    useAchievementSync(snapshot, fireConfetti)
 
     const isAdmin = useIsAdmin()
     const [trackId, setTrackId] = useState<string | null>(null)
