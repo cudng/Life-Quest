@@ -1,4 +1,4 @@
-# DevQuest — Gamified Career Roadmap
+# Life Quest — Gamified Career Roadmap
 
 A personal RPG-style career and life tracker. Level up through real milestones, build a tech skill tree, complete daily quests, track job applications, and earn achievements.
 

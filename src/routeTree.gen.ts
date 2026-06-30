@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SkillTreeRouteImport } from './routes/skill-tree'
 import { Route as RoadmapRouteImport } from './routes/roadmap'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoabBoardRouteImport } from './routes/joab-board'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const SkillTreeRoute = SkillTreeRouteImport.update({
 const RoadmapRoute = RoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoabBoardRoute = JoabBoardRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/joab-board': typeof JoabBoardRoute
+  '/login': typeof LoginRoute
   '/roadmap': typeof RoadmapRoute
   '/skill-tree': typeof SkillTreeRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/joab-board': typeof JoabBoardRoute
+  '/login': typeof LoginRoute
   '/roadmap': typeof RoadmapRoute
   '/skill-tree': typeof SkillTreeRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/joab-board': typeof JoabBoardRoute
+  '/login': typeof LoginRoute
   '/roadmap': typeof RoadmapRoute
   '/skill-tree': typeof SkillTreeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/achievements' | '/joab-board' | '/roadmap' | '/skill-tree'
+  fullPaths:
+    | '/'
+    | '/achievements'
+    | '/joab-board'
+    | '/login'
+    | '/roadmap'
+    | '/skill-tree'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/achievements' | '/joab-board' | '/roadmap' | '/skill-tree'
+  to:
+    | '/'
+    | '/achievements'
+    | '/joab-board'
+    | '/login'
+    | '/roadmap'
+    | '/skill-tree'
   id:
     | '__root__'
     | '/'
     | '/achievements'
     | '/joab-board'
+    | '/login'
     | '/roadmap'
     | '/skill-tree'
   fileRoutesById: FileRoutesById
@@ -81,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
   JoabBoardRoute: typeof JoabBoardRoute
+  LoginRoute: typeof LoginRoute
   RoadmapRoute: typeof RoadmapRoute
   SkillTreeRoute: typeof SkillTreeRoute
 }
@@ -99,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/roadmap'
       fullPath: '/roadmap'
       preLoaderRoute: typeof RoadmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/joab-board': {
@@ -129,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
   JoabBoardRoute: JoabBoardRoute,
+  LoginRoute: LoginRoute,
   RoadmapRoute: RoadmapRoute,
   SkillTreeRoute: SkillTreeRoute,
 }

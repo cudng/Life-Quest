@@ -13,7 +13,7 @@ import type {
   Profile,
   Mastery,
 } from "@/data/types";
-import { xpToLevel } from "@/engine/levels";
+import { xpToLevel, xpForLevel } from "@/engine/levels";
 
 /** XP granted per skill by its current mastery (cumulative, tunable). */
 const MASTERY_XP: Record<Mastery, number> = {
@@ -83,6 +83,28 @@ export function buildSnapshot(input: ProgressInput): ProgressSnapshot {
 /** Current level from total XP. */
 export function getLevel(snapshot: ProgressSnapshot): number {
   return xpToLevel(snapshot.totalXp);
+}
+
+/** Where the player sits within their current level, for rendering the XP bar. */
+export interface LevelProgress {
+  level: number;
+  totalXp: number;
+  /** XP earned past the current level's floor. */
+  intoLevel: number;
+  /** XP between the current level's floor and the next level's threshold. */
+  span: number;
+  /** intoLevel / span, clamped to 0..1. */
+  ratio: number;
+}
+
+export function getLevelProgress(snapshot: ProgressSnapshot): LevelProgress {
+  const level = xpToLevel(snapshot.totalXp);
+  const floor = xpForLevel(level);
+  const ceil = xpForLevel(level + 1);
+  const span = ceil - floor;
+  const intoLevel = snapshot.totalXp - floor;
+  const ratio = span > 0 ? Math.min(1, Math.max(0, intoLevel / span)) : 0;
+  return { level, totalXp: snapshot.totalXp, intoLevel, span, ratio };
 }
 
 /** Overall completion %: completed milestones ÷ total milestones (0 when none). */
