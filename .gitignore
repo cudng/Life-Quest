@@ -14,13 +14,17 @@ dist-ssr
 graphify-out
 .tanstack
 PLAN.md
+CLAUDE.md
+SUPABASE.md
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+.env
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.claude

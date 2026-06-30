@@ -1,0 +1,87 @@
+-- Seed / starter content for DevQuest
+-- Run AFTER schema.sql and policies.sql.
+-- Insert order respects FKs: tracks -> stages -> milestones -> sub_tasks,
+-- skills roots before children.
+
+-- ---------------------------------------------------------------------------
+-- tracks
+-- ---------------------------------------------------------------------------
+INSERT INTO tracks (id, title, icon, position) VALUES
+  ('education', 'Education', '🎓', 0),
+  ('career',    'Career',    '💼', 1),
+  ('side-projects', 'Side Projects', '🚀', 2)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- stages
+-- ---------------------------------------------------------------------------
+INSERT INTO stages (id, track_id, title, position) VALUES
+  ('cs-fundamentals', 'education', 'CS Fundamentals', 0),
+  ('cs-bachelor',     'education', 'CS Bachelor',     1),
+  ('job-hunt',        'career',    'Job Hunt',        0),
+  ('first-job',       'career',    'First Job',       1),
+  ('portfolio',       'side-projects', 'Portfolio',   0)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- milestones
+-- ---------------------------------------------------------------------------
+INSERT INTO milestones (id, stage_id, title, description, xp, prerequisites) VALUES
+  ('learn-git',        'cs-fundamentals', 'Learn Git basics',        'Branches, commits, merges, rebases.', 100, '[]'),
+  ('learn-python',     'cs-fundamentals', 'Learn Python basics',     'Syntax, data structures, functions.', 150, '[]'),
+  ('learn-sql',        'cs-fundamentals', 'Learn SQL',               'Queries, joins, indexes, constraints.', 150, '["learn-python"]'),
+  ('data-structures',  'cs-bachelor',     'Data Structures & Algorithms', 'Big-O, lists, trees, graphs, sorting.', 300, '["learn-python"]'),
+  ('build-portfolio',  'portfolio',       'Build portfolio site',    'Personal site showcasing projects.', 200, '[]'),
+  ('apply-internships','job-hunt',        'Apply to internships',    'Send 20 tailored applications.', 250, '["build-portfolio"]')
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- sub_tasks
+-- ---------------------------------------------------------------------------
+INSERT INTO sub_tasks (id, milestone_id, title, position) VALUES
+  ('git-init',       'learn-git',    'Init a repo and make first commit', 0),
+  ('git-branch',     'learn-git',    'Create and merge a branch',         1),
+  ('git-rebase',     'learn-git',    'Do an interactive rebase',          2),
+  ('py-syntax',      'learn-python', 'Variables, loops, conditionals',    0),
+  ('py-functions',   'learn-python', 'Functions and modules',             1),
+  ('py-oop',         'learn-python', 'Classes and OOP',                   2),
+  ('sql-select',     'learn-sql',    'SELECT, WHERE, ORDER BY',           0),
+  ('sql-joins',      'learn-sql',    'INNER and LEFT joins',              1)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- skills (roots first, then children via parent_id)
+-- ---------------------------------------------------------------------------
+INSERT INTO skills (id, name, icon, parent_id, mastery, position) VALUES
+  ('python',     'Python',     '🐍', NULL,         'learning',  0),
+  ('javascript', 'JavaScript', '🟨', NULL,         'learning',  1),
+  ('sql',        'SQL',        '🗄️', NULL,         'learning',  2)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO skills (id, name, icon, parent_id, mastery, position) VALUES
+  ('flask',      'Flask',      '🌶️', 'python',     'locked',    0),
+  ('flet',       'Flet',       '📱', 'python',     'locked',    1),
+  ('typescript', 'TypeScript', '🔷', 'javascript', 'learning',  0),
+  ('react',      'React',      '⚛️', 'javascript', 'locked',    1),
+  ('nextjs',     'Next.js',    '▲',  'javascript', 'locked',    2),
+  ('postgres',   'PostgreSQL', '🐘', 'sql',        'learning',  0)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- daily_quests (templates)
+-- ---------------------------------------------------------------------------
+INSERT INTO daily_quests (id, title, xp, active, position) VALUES
+  ('leetcode',   'Solve 1 LeetCode problem', 50, true, 0),
+  ('read-docs',  'Read tech docs 30 min',    30, true, 1),
+  ('commit',     'Make at least 1 commit',   40, true, 2),
+  ('exercise',   'Exercise 20 min',          20, true, 3),
+  ('english',    'Practice English 15 min',  20, true, 4)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- profile (single row, id = 1)
+-- ---------------------------------------------------------------------------
+INSERT INTO profile (id, streak_count) VALUES (1, 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- daily_completions, job_applications, achievements_unlocked start empty.
