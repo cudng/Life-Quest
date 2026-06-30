@@ -5,7 +5,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { queryKeys } from "@/data/keys";
-import type { JobApplication, JobStatus, Mastery, Profile } from "@/data/types";
+import type {
+  JobApplication,
+  JobStatus,
+  Mastery,
+  Milestone,
+  Profile,
+  Resource,
+} from "@/data/types";
 import { nextStreak } from "@/engine/streak";
 
 // ---------------------------------------------------------------------------
@@ -42,6 +49,113 @@ export function useToggleSubTask() {
       if (error) throw error;
     },
     onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Roadmap admin: create content (tracks / stages / milestones), edit & delete
+// milestones. Ids are caller-generated slugs (see lib/slug.ts). Each write
+// throws on error and invalidates the affected read key.
+// ---------------------------------------------------------------------------
+
+export interface NewTrack {
+  id: string;
+  title: string;
+  icon: string | null;
+  position: number;
+}
+
+export interface NewStage {
+  id: string;
+  track_id: string;
+  title: string;
+  position: number;
+}
+
+export interface NewMilestone {
+  id: string;
+  stage_id: string;
+  title: string;
+  description: string;
+  xp: number;
+  prerequisites: string[];
+  resources: Resource[];
+}
+
+export type MilestoneUpdate = Partial<
+  Pick<
+    Milestone,
+    "title" | "description" | "xp" | "prerequisites" | "resources" | "stage_id"
+  >
+>;
+
+export function useAddTrack() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewTrack) => {
+      const { error } = await supabase.from("tracks").insert(vars);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tracks });
+    },
+  });
+}
+
+export function useAddStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewStage) => {
+      const { error } = await supabase.from("stages").insert(vars);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.stages });
+    },
+  });
+}
+
+export function useAddMilestone() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewMilestone) => {
+      const { error } = await supabase.from("milestones").insert(vars);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.milestones });
+    },
+  });
+}
+
+export function useUpdateMilestone() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; patch: MilestoneUpdate }) => {
+      const { error } = await supabase
+        .from("milestones")
+        .update(vars.patch)
+        .eq("id", vars.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.milestones });
+    },
+  });
+}
+
+/** Delete a milestone. sub_tasks cascade in the DB (ON DELETE CASCADE). */
+export function useDeleteMilestone() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("milestones").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.milestones });
       void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
     },
   });
