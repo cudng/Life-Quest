@@ -2,10 +2,10 @@
 // If you later add the Supabase CLI, you can regenerate raw DB types and
 // alias them here instead.
 
-/** jsonb resources column: [{ label, url }] */
+/** jsonb resources column: [{ label, url? }]. url omitted = no link (e.g. a book). */
 export interface Resource {
   label: string;
-  url: string;
+  url?: string;
 }
 
 export type Mastery = "locked" | "learning" | "proficient" | "expert";
@@ -67,6 +67,10 @@ export interface Skill {
   resources: Resource[];
   mastery: Mastery;
   position: number;
+  /** admin-dragged canvas x; null = use computed layout spot */
+  pos_x: number | null;
+  /** admin-dragged canvas y; null = use computed layout spot */
+  pos_y: number | null;
 }
 
 export interface DailyQuest {

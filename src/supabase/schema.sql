@@ -41,7 +41,10 @@ CREATE TABLE skills(
     resources JSONB NOT NULL DEFAULT '[]',
     mastery TEXT NOT NULL DEFAULT 'locked'
         CHECK (mastery IN ('locked','learning','proficient','expert')),
-    position INT NOT NULL DEFAULT 0
+    position INT NOT NULL DEFAULT 0,
+    -- admin-dragged canvas coordinates; null = use the computed layout spot
+    pos_x REAL,
+    pos_y REAL
 );
 
 CREATE TABLE daily_quests(

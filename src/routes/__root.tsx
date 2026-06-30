@@ -39,8 +39,8 @@ const RootLayout = () => (
             <Link to="/roadmap" className="[&.active]:font-bold">
                 Roadmap
             </Link>
-            <Link to="/joab-board" className="[&.active]:font-bold">
-                Joab Board
+            <Link to="/job-board" className="[&.active]:font-bold">
+                Job Board
             </Link>
             <Link to="/skill-tree" className="[&.active]:font-bold">
                 Skill Tree

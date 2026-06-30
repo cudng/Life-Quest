@@ -12,6 +12,7 @@ import type {
   Milestone,
   Profile,
   Resource,
+  Skill,
 } from "@/data/types";
 import { nextStreak } from "@/engine/streak";
 
@@ -173,6 +174,82 @@ export function useSetSkillMastery() {
         .from("skills")
         .update({ mastery: vars.mastery })
         .eq("id", vars.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.skills });
+    },
+  });
+}
+
+// Admin: create / edit / delete skills. Ids are caller-generated slugs.
+
+export interface NewSkill {
+  id: string;
+  name: string;
+  icon: string;
+  parent_id: string | null;
+  description: string | null;
+  resources: Resource[];
+  position: number;
+}
+
+export type SkillUpdate = Partial<
+  Pick<Skill, "name" | "icon" | "description" | "resources" | "parent_id">
+>;
+
+export function useAddSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewSkill) => {
+      const { error } = await supabase.from("skills").insert(vars);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.skills });
+    },
+  });
+}
+
+export function useUpdateSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; patch: SkillUpdate }) => {
+      const { error } = await supabase
+        .from("skills")
+        .update(vars.patch)
+        .eq("id", vars.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.skills });
+    },
+  });
+}
+
+/**
+ * Persist an admin-dragged node position. No query invalidation: the canvas
+ * already shows the new spot, so refetching would be wasted work (and could
+ * snap the node mid-drag).
+ */
+export function useUpdateSkillPosition() {
+  return useMutation({
+    mutationFn: async (vars: { id: string; x: number; y: number }) => {
+      const { error } = await supabase
+        .from("skills")
+        .update({ pos_x: vars.x, pos_y: vars.y })
+        .eq("id", vars.id);
+      if (error) throw error;
+    },
+  });
+}
+
+/** Delete a skill. Child skills cascade in the DB (parent_id ON DELETE CASCADE). */
+export function useDeleteSkill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("skills").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

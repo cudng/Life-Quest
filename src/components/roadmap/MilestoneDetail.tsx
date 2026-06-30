@@ -240,16 +240,22 @@ export function MilestoneDetail({
                 Resources
               </h3>
               <ul className="mt-3 space-y-1">
-                {milestone.resources.map((r) => (
-                  <li key={r.url}>
-                    <a
-                      href={r.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-[var(--accent)] hover:underline"
-                    >
-                      {r.label} ↗
-                    </a>
+                {milestone.resources.map((r, i) => (
+                  <li key={i}>
+                    {r.url ? (
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-[var(--accent)] hover:underline"
+                      >
+                        {r.label} ↗
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        📖 {r.label}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
