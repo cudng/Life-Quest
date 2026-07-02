@@ -14,6 +14,7 @@ import type {
   Mastery,
 } from "@/data/types";
 import { xpToLevel, xpForLevel } from "@/engine/levels";
+import { addDays } from "@/lib/date";
 
 /** XP granted per skill by its current mastery (cumulative, tunable). */
 const MASTERY_XP: Record<Mastery, number> = {
@@ -33,6 +34,15 @@ export interface ProgressSnapshot {
   jobApplications: JobApplication[];
   unlockedAchievementIds: string[];
   streak: { count: number; lastCheckIn: string | null };
+  /** player role label (HUD), or null if unset */
+  role: string | null;
+  /** best streak ever reached */
+  longestStreak: number;
+  /**
+   * Last 7 days of activity for the streak dots, oldest → today (index 6 = today).
+   * A day is active when ≥1 daily quest was completed on it.
+   */
+  weeklyActivity: boolean[];
 }
 
 /** Raw rows fetched from Supabase, plus today's date (YYYY-MM-DD). */
@@ -63,6 +73,11 @@ export function buildSnapshot(input: ProgressInput): ProgressSnapshot {
   const skillMastery: Record<string, Mastery> = {};
   for (const s of input.skills) skillMastery[s.id] = s.mastery;
 
+  const activeDays = new Set(input.dailyCompletions.map((c) => c.completed_on));
+  const weeklyActivity = Array.from({ length: 7 }, (_, i) =>
+    activeDays.has(addDays(input.today, i - 6)),
+  );
+
   return {
     totalXp: milestoneXp + skillXp + dailyXp,
     completedNodeIds: completedMilestones.map((m) => m.id),
@@ -77,6 +92,9 @@ export function buildSnapshot(input: ProgressInput): ProgressSnapshot {
       count: input.profile.streak_count,
       lastCheckIn: input.profile.last_check_in,
     },
+    role: input.profile.role,
+    longestStreak: input.profile.longest_streak,
+    weeklyActivity,
   };
 }
 

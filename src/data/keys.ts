@@ -12,4 +12,5 @@ export const queryKeys = {
   jobApplications: ["job_applications"] as const,
   achievementsUnlocked: ["achievements_unlocked"] as const,
   profile: ["profile"] as const,
+  attributes: ["attributes"] as const,
 } as const;

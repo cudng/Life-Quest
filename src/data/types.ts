@@ -116,4 +116,16 @@ export interface Profile {
   last_check_in: string | null;
   /** time (HH:MM:SS) or null */
   reminder_time: string | null;
+  /** player role label shown on the HUD, e.g. "Backend Engineer Path" */
+  role: string | null;
+  /** best streak ever reached */
+  longest_streak: number;
+}
+
+/** Character stat bar (Home HUD): value is 0..100. */
+export interface Attribute {
+  id: string;
+  name: string;
+  value: number;
+  position: number;
 }

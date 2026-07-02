@@ -81,7 +81,18 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- profile (single row, id = 1)
 -- ---------------------------------------------------------------------------
-INSERT INTO profile (id, streak_count) VALUES (1, 0)
+INSERT INTO profile (id, streak_count, role, longest_streak) VALUES
+  (1, 0, 'Backend Engineer Path', 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- attributes (character stat bars)
+-- ---------------------------------------------------------------------------
+INSERT INTO attributes (id, name, value, position) VALUES
+  ('problem-solving', 'Problem Solving', 82, 0),
+  ('system-design',   'System Design',   61, 1),
+  ('code-quality',    'Code Quality',    74, 2),
+  ('communication',   'Communication',   68, 3)
 ON CONFLICT (id) DO NOTHING;
 
 -- daily_completions, job_applications, achievements_unlocked start empty.

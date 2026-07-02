@@ -91,3 +91,12 @@ CREATE POLICY "admin write profile" ON profile
     FOR ALL TO authenticated
     USING (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a')
     WITH CHECK (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a');
+
+-- attributes
+ALTER TABLE attributes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public read attributes" ON attributes
+    FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "admin write attributes" ON attributes
+    FOR ALL TO authenticated
+    USING (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a')
+    WITH CHECK (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a');

@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { queryKeys } from "@/data/keys";
 import type {
+  Attribute,
   JobApplication,
   JobStatus,
   Mastery,
@@ -373,7 +374,10 @@ export function useUnlockAchievements() {
 // ---------------------------------------------------------------------------
 
 export type ProfileUpdate = Partial<
-  Pick<Profile, "streak_count" | "last_check_in" | "reminder_time">
+  Pick<
+    Profile,
+    "streak_count" | "last_check_in" | "reminder_time" | "role" | "longest_streak"
+  >
 >;
 
 export function useUpdateProfile() {
@@ -388,6 +392,55 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.profile });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Attributes (Home HUD stat bars) — admin CRUD. Ids are caller-generated slugs.
+// ---------------------------------------------------------------------------
+
+export type NewAttribute = Attribute;
+export type AttributeUpdate = Partial<Pick<Attribute, "name" | "value" | "position">>;
+
+export function useAddAttribute() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewAttribute) => {
+      const { error } = await supabase.from("attributes").insert(vars);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.attributes });
+    },
+  });
+}
+
+export function useUpdateAttribute() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; patch: AttributeUpdate }) => {
+      const { error } = await supabase
+        .from("attributes")
+        .update(vars.patch)
+        .eq("id", vars.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.attributes });
+    },
+  });
+}
+
+export function useDeleteAttribute() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("attributes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.attributes });
     },
   });
 }

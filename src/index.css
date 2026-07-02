@@ -118,11 +118,9 @@
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
+  margin: 0;
+  text-align: left;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -211,6 +209,31 @@ code {
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+
+  /* Quest design system — theme-aware; opacity modifiers give the
+     rgba(...) tints from the prototype, e.g. bg-q-accent/14. */
+  --color-q-bg: var(--q-bg);
+  --color-q-panel: var(--q-panel);
+  --color-q-panel-2: var(--q-panel-2);
+  --color-q-panel-locked: var(--q-panel-locked);
+  --color-q-panel-raised: var(--q-panel-raised);
+  --color-q-track: var(--q-track);
+  --color-q-line: var(--q-line);
+  --color-q-border: var(--q-border);
+  --color-q-border-strong: var(--q-border-strong);
+  --color-q-overlay: var(--q-overlay);
+  --color-q-fg: var(--q-fg);
+  --color-q-fg-2: var(--q-fg-2);
+  --color-q-muted: var(--q-muted);
+  --color-q-dim: var(--q-dim);
+  --color-q-faint: var(--q-faint);
+  --color-q-accent: var(--q-accent);
+  --color-q-accent-bright: var(--q-accent-bright);
+  --color-q-accent-deep: var(--q-accent-deep);
+  --color-q-accent-fg: var(--q-accent-fg);
+  --color-q-flame: var(--q-flame);
+  --color-q-flame-bright: var(--q-flame-bright);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -254,6 +277,74 @@ code {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ===== Quest design tokens — LIGHT (designed counterpart) ===== */
+:root {
+  --q-bg: #fafafb;
+  --q-panel: #ffffff;
+  --q-panel-2: #f4f4f5;
+  --q-panel-locked: #f1f1f3;
+  --q-panel-raised: #ffffff;
+  --q-track: #e4e4e7;
+  --q-line: #d4d4d8;
+  --q-border: rgba(9, 9, 11, 0.09);
+  --q-border-strong: rgba(9, 9, 11, 0.14);
+  --q-overlay: rgba(9, 9, 11, 0.03);
+  --q-fg: #18181b;
+  --q-fg-2: #27272a;
+  --q-muted: #52525b;
+  --q-dim: #71717a;
+  --q-faint: #a1a1aa;
+  --q-accent: #6366f1;
+  --q-accent-bright: #4f46e5;
+  --q-accent-deep: #4338ca;
+  --q-accent-fg: #4338ca;
+  --q-flame: #ea6a10;
+  --q-flame-bright: #d9600c;
+  --q-glow-sm: 0 1px 2px rgba(99, 102, 241, 0.2);
+  --q-glow-md: 0 1px 3px rgba(99, 102, 241, 0.25);
+  --q-glow-lg: 0 6px 18px rgba(99, 102, 241, 0.3);
+  --q-glow-flame: 0 1px 3px rgba(249, 115, 22, 0.35);
+  --q-page-glow: radial-gradient(
+    1100px 460px at 82% -12%,
+    rgba(99, 102, 241, 0.07),
+    transparent 60%
+  );
+}
+
+/* ===== Quest design tokens — DARK (exact prototype values) ===== */
+.dark {
+  --q-bg: #09090b;
+  --q-panel: #131316;
+  --q-panel-2: #0e0e10;
+  --q-panel-locked: #1c1c20;
+  --q-panel-raised: #141417;
+  --q-track: #27272a;
+  --q-line: #3f3f46;
+  --q-border: rgba(255, 255, 255, 0.08);
+  --q-border-strong: rgba(255, 255, 255, 0.12);
+  --q-overlay: rgba(255, 255, 255, 0.03);
+  --q-fg: #fafafa;
+  --q-fg-2: #e4e4e7;
+  --q-muted: #a1a1aa;
+  --q-dim: #71717a;
+  --q-faint: #52525b;
+  --q-accent: #6366f1;
+  --q-accent-bright: #818cf8;
+  --q-accent-deep: #4f46e5;
+  --q-accent-fg: #c7d2fe;
+  --q-flame: #f97316;
+  --q-flame-bright: #fb923c;
+  --q-glow-sm: 0 0 10px rgba(99, 102, 241, 0.4);
+  --q-glow-md: 0 0 16px rgba(99, 102, 241, 0.5);
+  --q-glow-lg: 0 6px 22px rgba(99, 102, 241, 0.55);
+  --q-glow-flame: 0 0 8px rgba(249, 115, 22, 0.6);
+  --q-page-glow: radial-gradient(
+    1100px 460px at 82% -12%,
+    rgba(99, 102, 241, 0.1),
+    transparent 60%
+  );
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;}
@@ -261,3 +352,77 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+/* ===== Quest UI — animations, helpers, page background ===== */
+
+/* Full-bleed page background with the indigo radial glow. */
+.q-page {
+  min-height: 100vh;
+  background: var(--q-page-glow), var(--q-bg);
+  color: var(--q-fg);
+}
+
+@keyframes dq-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+@keyframes dq-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes dq-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(129, 140, 248, 0.5),
+      0 0 14px rgba(129, 140, 248, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(129, 140, 248, 0),
+      0 0 22px rgba(129, 140, 248, 0.7);
+  }
+}
+@keyframes dq-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.dq-nav-link:hover {
+  color: var(--q-fg) !important;
+  background: var(--q-overlay);
+}
+.dq-quest:hover {
+  background: var(--q-overlay);
+}
+.dq-teaser:hover {
+  border-color: var(--q-accent) !important;
+}
+.dq-node:hover {
+  transform: translateY(-2px);
+}
+.dq-carousel:hover .dq-track {
+  animation-play-state: paused;
+}
+.dq-scroll::-webkit-scrollbar {
+  width: 7px;
+}
+.dq-scroll::-webkit-scrollbar-thumb {
+  background: var(--q-border-strong);
+  border-radius: 8px;
+}
+.dq-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

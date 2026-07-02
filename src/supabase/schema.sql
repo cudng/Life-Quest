@@ -85,5 +85,14 @@ CREATE TABLE profile(
     id int primary key default 1 check(id = 1),
     streak_count int not null default 0,
     last_check_in date,
-    reminder_time time
+    reminder_time time,
+    role text,
+    longest_streak int not null default 0
+);
+
+CREATE TABLE attributes(
+    id text primary key,
+    name text not null,
+    value int not null default 0 check (value between 0 and 100),
+    position int not null default 0
 );

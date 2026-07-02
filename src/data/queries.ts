@@ -15,6 +15,7 @@ import type {
   JobApplication,
   AchievementUnlocked,
   Profile,
+  Attribute,
 } from "@/data/types";
 
 /** Select all rows of a table, optionally ordered. Throws on error. */
@@ -61,6 +62,9 @@ export const fetchJobApplications = () =>
 
 export const fetchAchievementsUnlocked = () =>
   fetchTable<AchievementUnlocked>("achievements_unlocked");
+
+export const fetchAttributes = () =>
+  fetchTable<Attribute>("attributes", { column: "position" });
 
 /** Singleton profile row (id = 1). Throws on error. */
 export async function fetchProfile(): Promise<Profile> {
@@ -115,3 +119,6 @@ export const useAchievementsUnlocked = () =>
 
 export const useProfile = () =>
   useQuery({ queryKey: queryKeys.profile, queryFn: fetchProfile });
+
+export const useAttributes = () =>
+  useQuery({ queryKey: queryKeys.attributes, queryFn: fetchAttributes });

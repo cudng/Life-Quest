@@ -8,6 +8,7 @@ import './index.css'
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 import { queryClient } from './lib/queryClient'
+import { ThemeProvider } from './components/theme-provider'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
@@ -25,9 +26,11 @@ if (!rootElement.innerHTML) {
     const root = ReactDOM.createRoot(rootElement)
     root.render(
         <StrictMode>
-            <QueryClientProvider client={queryClient}>
-                <RouterProvider router={router} />
-            </QueryClientProvider>
+            <ThemeProvider>
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router} />
+                </QueryClientProvider>
+            </ThemeProvider>
         </StrictMode>,
     )
 }
