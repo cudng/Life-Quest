@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { useTracks, useStages, useMilestones } from '@/data/queries'
 import type { Milestone, Stage } from '@/data/types'
@@ -189,6 +190,12 @@ export function ActiveQuestline() {
                             </button>
                         )
                     })}
+                    <Link
+                        to="/roadmap"
+                        className="ml-1 whitespace-nowrap text-xs text-q-accent-bright hover:underline"
+                    >
+                        Roadmap →
+                    </Link>
                 </div>
             </div>
 

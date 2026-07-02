@@ -21,6 +21,7 @@ export interface UseProgressResult {
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
+  refetch: () => void;
 }
 
 export function useProgress(): UseProgressResult {
@@ -47,6 +48,12 @@ export function useProgress(): UseProgressResult {
   const isLoading = queries.some((q) => q.isLoading);
   const isError = queries.some((q) => q.isError);
   const error = queries.find((q) => q.error)?.error ?? null;
+
+  const refetch = () => {
+    for (const q of queries) {
+      if (q.isError) void q.refetch();
+    }
+  };
 
   const snapshot = useMemo<ProgressSnapshot | undefined>(() => {
     if (
@@ -83,5 +90,5 @@ export function useProgress(): UseProgressResult {
     profile.data,
   ]);
 
-  return { snapshot, isLoading, isError, error };
+  return { snapshot, isLoading, isError, error, refetch };
 }

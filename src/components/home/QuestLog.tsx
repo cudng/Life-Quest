@@ -1,8 +1,23 @@
+import { useEffect, useState } from 'react'
 import type { ProgressSnapshot } from '@/engine/progress'
 import { Card } from '@/components/ui/card'
 import { useDailyQuests } from '@/data/queries'
 import { useToggleDailyQuest } from '@/data/mutations'
 import { useIsAdmin } from '@/auth/useIsAdmin'
+import { formatDuration, msUntilMidnight } from '@/lib/date'
+
+/** Time left until the next local midnight, refreshed twice a minute. */
+function useResetCountdown(): string {
+    const [label, setLabel] = useState(() => formatDuration(msUntilMidnight()))
+    useEffect(() => {
+        const id = setInterval(
+            () => setLabel(formatDuration(msUntilMidnight())),
+            30_000,
+        )
+        return () => clearInterval(id)
+    }, [])
+    return label
+}
 
 interface QuestLogProps {
     snapshot: ProgressSnapshot
@@ -17,6 +32,7 @@ export function QuestLog({ snapshot, today }: QuestLogProps) {
     const doneIds = new Set(snapshot.todayCompletedQuestIds)
     const active = (quests.data ?? []).filter((q) => q.active)
     const completedCount = active.filter((q) => doneIds.has(q.id)).length
+    const countdown = useResetCountdown()
 
     return (
         <Card className="gap-0 rounded-2xl border-0 bg-q-panel px-4 !py-[15px] ring-1 ring-q-border">
@@ -26,6 +42,12 @@ export function QuestLog({ snapshot, today }: QuestLogProps) {
                 </span>
                 <span className="rounded-full bg-q-accent/[.12] px-[7px] py-0.5 font-mono text-[10px] text-q-accent-bright">
                     {completedCount}/{active.length}
+                </span>
+                <span
+                    className="ml-auto whitespace-nowrap font-mono text-[9.5px] text-q-dim"
+                    title="Daily quests reset at midnight"
+                >
+                    resets in {countdown}
                 </span>
             </div>
 
@@ -39,7 +61,7 @@ export function QuestLog({ snapshot, today }: QuestLogProps) {
                         <button
                             key={q.id}
                             type="button"
-                            disabled={!isAdmin || toggle.isPending}
+                            disabled={!isAdmin}
                             onClick={() =>
                                 toggle.mutate({ questId: q.id, today, completed: !done })
                             }

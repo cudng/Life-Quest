@@ -9,5 +9,6 @@ export function fireConfetti(): void {
     spread: 75,
     startVelocity: 45,
     origin: { y: 0.7 },
+    disableForReducedMotion: true,
   });
 }

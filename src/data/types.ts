@@ -120,6 +120,8 @@ export interface Profile {
   role: string | null;
   /** best streak ever reached */
   longest_streak: number;
+  /** player name shown on the HUD; falls back to the email-derived guess */
+  display_name: string | null;
 }
 
 /** Character stat bar (Home HUD): value is 0..100. */

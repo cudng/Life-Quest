@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { ACHIEVEMENTS } from '@/data/achievements'
+import { ACHIEVEMENTS, nextUnlock } from '@/data/achievements'
 import { useAchievementsUnlocked } from '@/data/queries'
+import type { ProgressSnapshot } from '@/engine/progress'
 
 interface Card {
     id: string
@@ -51,9 +52,10 @@ function AchievementCard({ card }: { card: Card }) {
     )
 }
 
-export function AchievementsCarousel() {
+export function AchievementsCarousel({ snapshot }: { snapshot: ProgressSnapshot }) {
     const unlocked = useAchievementsUnlocked()
     const at = new Map((unlocked.data ?? []).map((r) => [r.id, r.unlocked_at]))
+    const next = nextUnlock(snapshot, new Set(at.keys()))
 
     const cards: Card[] = ACHIEVEMENTS.map((a) => ({
         id: a.id,
@@ -73,7 +75,7 @@ export function AchievementsCarousel() {
 
     return (
         <div>
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                     <span className="font-mono text-[10px] tracking-[0.1em] text-q-accent">
                         ACHIEVEMENTS
@@ -82,9 +84,34 @@ export function AchievementsCarousel() {
                         {earnedCount} earned
                     </span>
                 </div>
+                {next && (
+                    <div
+                        className="hidden min-w-0 items-center gap-2 rounded-full border border-q-border bg-q-panel px-3 py-1 sm:flex"
+                        title={next.achievement.description}
+                    >
+                        <span className="font-mono text-[8.5px] tracking-[0.08em] text-q-dim">
+                            NEXT
+                        </span>
+                        <span className="text-[13px] leading-none">
+                            {next.achievement.icon}
+                        </span>
+                        <span className="truncate text-[11.5px] font-medium text-q-fg-2">
+                            {next.achievement.title}
+                        </span>
+                        <span className="h-1 w-16 shrink-0 overflow-hidden rounded-full bg-q-track">
+                            <span
+                                className="block h-full rounded-full bg-q-accent"
+                                style={{ width: `${Math.round(next.ratio * 100)}%` }}
+                            />
+                        </span>
+                        <span className="whitespace-nowrap font-mono text-[10px] text-q-accent-bright">
+                            {next.current}/{next.target}
+                        </span>
+                    </div>
+                )}
                 <Link
                     to="/achievements"
-                    className="text-xs text-q-accent-bright hover:underline"
+                    className="whitespace-nowrap text-xs text-q-accent-bright hover:underline"
                 >
                     View all →
                 </Link>

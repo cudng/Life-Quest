@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { useSkills } from '@/data/queries'
 import type { Mastery, Skill } from '@/data/types'
@@ -89,9 +90,17 @@ export function SkillTreeSummary() {
                         {unlocked} of {all.length} skills unlocked
                     </div>
                 </div>
-                <span className="shrink-0 whitespace-nowrap rounded-full bg-q-accent/[.12] px-2.5 py-[3px] font-mono text-[11.5px] text-q-accent-bright">
-                    {learning} learning
-                </span>
+                <div className="flex shrink-0 items-center gap-2.5">
+                    <span className="whitespace-nowrap rounded-full bg-q-accent/[.12] px-2.5 py-[3px] font-mono text-[11.5px] text-q-accent-bright">
+                        {learning} learning
+                    </span>
+                    <Link
+                        to="/skill-tree"
+                        className="whitespace-nowrap text-xs text-q-accent-bright hover:underline"
+                    >
+                        Open tree →
+                    </Link>
+                </div>
             </div>
 
             <div className="flex flex-wrap items-stretch gap-x-3 gap-y-4">

@@ -2,8 +2,8 @@ import { Card } from '@/components/ui/card'
 import { useSession } from '@/auth/session'
 import { getLevelProgress, type ProgressSnapshot } from '@/engine/progress'
 
-/** Capitalized display name from the signed-in email, fallback "Player". */
-function displayName(email: string | undefined): string {
+/** Fallback name when the profile has none: capitalized guess from the email. */
+function nameFromEmail(email: string | undefined): string {
     if (!email) return 'Player'
     const local = email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim()
     if (!local) return 'Player'
@@ -42,7 +42,7 @@ export function HudBanner({ snapshot }: { snapshot: ProgressSnapshot }) {
     const lp = getLevelProgress(snapshot)
     const pct = Math.round(lp.ratio * 100)
     const toNext = lp.span - lp.intoLevel
-    const name = displayName(session?.user.email)
+    const name = snapshot.displayName ?? nameFromEmail(session?.user.email)
     const milestones = snapshot.completedNodeIds.length
     const badges = snapshot.unlockedAchievementIds.length
 

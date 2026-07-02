@@ -10,22 +10,37 @@ import { StreakCard } from '@/components/home/StreakCard'
 import { AttributesCard } from '@/components/home/AttributesCard'
 import { AchievementsCarousel } from '@/components/home/AchievementsCarousel'
 import { CharacterAdminDialog } from '@/components/home/CharacterAdminDialog'
+import { HomeSkeleton } from '@/components/home/HomeSkeleton'
 
 export const Route = createFileRoute('/')({
     component: Index,
 })
 
 function Index() {
-    const { snapshot, isLoading, isError, error } = useProgress()
+    const { snapshot, isLoading, isError, error, refetch } = useProgress()
     const isAdmin = useIsAdmin()
 
     if (isLoading) {
-        return <div className="p-6 text-q-muted">Loading…</div>
+        return <HomeSkeleton />
     }
     if (isError || !snapshot) {
         return (
-            <div className="p-6 text-red-500">
-                Failed to load: {error?.message ?? 'unknown error'}
+            <div className="mx-auto max-w-[1180px] px-6 py-5">
+                <div className="flex flex-col items-start gap-3 rounded-2xl bg-q-panel px-5 py-4 ring-1 ring-q-border">
+                    <div className="text-[14px] font-semibold text-q-fg">
+                        Failed to load your progress
+                    </div>
+                    <div className="text-[12.5px] text-q-muted">
+                        {error?.message ?? 'Unknown error'}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={refetch}
+                        className="rounded-lg border border-q-border px-3 py-1.5 text-[12px] font-medium text-q-fg-2 transition-colors hover:bg-q-overlay"
+                    >
+                        Retry
+                    </button>
+                </div>
             </div>
         )
     }
@@ -54,7 +69,7 @@ function Index() {
                 </div>
             </div>
 
-            <AchievementsCarousel />
+            <AchievementsCarousel snapshot={snapshot} />
         </div>
     )
 }

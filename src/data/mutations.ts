@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { queryKeys } from "@/data/keys";
 import type {
   Attribute,
+  DailyCompletion,
   JobApplication,
   JobStatus,
   Mastery,
@@ -263,7 +264,11 @@ export function useDeleteSkill() {
 // Daily quests
 // ---------------------------------------------------------------------------
 
-/** Mark a quest done (insert) or undone (delete) for the given local date. */
+/**
+ * Mark a quest done (insert) or undone (delete) for the given local date.
+ * Optimistic: the cached completions list is patched immediately so the UI
+ * flips without waiting for the round-trip, then rolled back on error.
+ */
 export function useToggleDailyQuest() {
   const qc = useQueryClient();
   return useMutation({
@@ -286,7 +291,39 @@ export function useToggleDailyQuest() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: queryKeys.dailyCompletions });
+      const previous = qc.getQueryData<DailyCompletion[]>(
+        queryKeys.dailyCompletions,
+      );
+      qc.setQueryData<DailyCompletion[]>(
+        queryKeys.dailyCompletions,
+        (rows = []) =>
+          vars.completed
+            ? [
+                ...rows,
+                {
+                  id: `optimistic-${vars.questId}-${vars.today}`,
+                  quest_id: vars.questId,
+                  completed_on: vars.today,
+                },
+              ]
+            : rows.filter(
+                (r) =>
+                  !(
+                    r.quest_id === vars.questId &&
+                    r.completed_on === vars.today
+                  ),
+              ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        qc.setQueryData(queryKeys.dailyCompletions, ctx.previous);
+      }
+    },
+    onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.dailyCompletions });
     },
   });
@@ -376,7 +413,12 @@ export function useUnlockAchievements() {
 export type ProfileUpdate = Partial<
   Pick<
     Profile,
-    "streak_count" | "last_check_in" | "reminder_time" | "role" | "longest_streak"
+    | "streak_count"
+    | "last_check_in"
+    | "reminder_time"
+    | "role"
+    | "longest_streak"
+    | "display_name"
   >
 >;
 

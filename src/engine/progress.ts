@@ -36,6 +36,8 @@ export interface ProgressSnapshot {
   streak: { count: number; lastCheckIn: string | null };
   /** player role label (HUD), or null if unset */
   role: string | null;
+  /** player display name (HUD), or null if unset */
+  displayName: string | null;
   /** best streak ever reached */
   longestStreak: number;
   /**
@@ -93,6 +95,7 @@ export function buildSnapshot(input: ProgressInput): ProgressSnapshot {
       lastCheckIn: input.profile.last_check_in,
     },
     role: input.profile.role,
+    displayName: input.profile.display_name,
     longestStreak: input.profile.longest_streak,
     weeklyActivity,
   };

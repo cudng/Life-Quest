@@ -134,12 +134,14 @@ export function CharacterAdminDialog() {
     const attributes = useAttributes()
     const updateProfile = useUpdateProfile()
 
+    const [name, setName] = useState('')
     const [role, setRole] = useState('')
     const [longest, setLongest] = useState('0')
 
     // Seed profile fields whenever the row loads/changes.
     useEffect(() => {
         if (profile.data) {
+            setName(profile.data.display_name ?? '')
             setRole(profile.data.role ?? '')
             setLongest(String(profile.data.longest_streak))
         }
@@ -164,6 +166,15 @@ export function CharacterAdminDialog() {
 
                 {/* Profile */}
                 <div className="grid gap-3">
+                    <div className="grid gap-1.5">
+                        <Label htmlFor="cad-name">Name</Label>
+                        <Input
+                            id="cad-name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Player name"
+                        />
+                    </div>
                     <div className="grid gap-1.5">
                         <Label htmlFor="cad-role">Role</Label>
                         <Input
@@ -190,6 +201,7 @@ export function CharacterAdminDialog() {
                         disabled={updateProfile.isPending}
                         onClick={() =>
                             updateProfile.mutate({
+                                display_name: name.trim() || null,
                                 role: role.trim() || null,
                                 longest_streak: Math.max(0, Math.round(Number(longest) || 0)),
                             })

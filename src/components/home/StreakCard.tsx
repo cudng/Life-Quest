@@ -1,7 +1,28 @@
+import { useEffect, useState } from 'react'
 import type { ProgressSnapshot } from '@/engine/progress'
 import { Card } from '@/components/ui/card'
 import { useStreakCheckIn } from '@/data/mutations'
 import { useIsAdmin } from '@/auth/useIsAdmin'
+import { addDays, formatDuration, msUntilMidnight } from '@/lib/date'
+
+/** Evening hour (local) from which an unchecked streak counts as at risk. */
+const AT_RISK_FROM_HOUR = 18
+
+/** Current time, refreshed once a minute (drives the at-risk countdown). */
+function useNow(): Date {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const id = setInterval(() => setNow(new Date()), 60_000)
+        return () => clearInterval(id)
+    }, [])
+    return now
+}
+
+/** Single-letter weekday for the dot `offset` days before today. */
+function weekdayLetter(today: string, offset: number): string {
+    const [y, m, d] = today.split('-').map(Number)
+    return 'SMTWTFS'[new Date(y, m - 1, d - offset).getDay()]
+}
 
 interface StreakCardProps {
     snapshot: ProgressSnapshot
@@ -11,13 +32,27 @@ interface StreakCardProps {
 export function StreakCard({ snapshot, today }: StreakCardProps) {
     const checkIn = useStreakCheckIn()
     const isAdmin = useIsAdmin()
+    const now = useNow()
     const checkedInToday = snapshot.streak.lastCheckIn === today
+
+    // The streak survives only if checked in today; warn from evening on.
+    const streakAlive =
+        snapshot.streak.count > 0 &&
+        snapshot.streak.lastCheckIn === addDays(today, -1)
+    const atRisk =
+        streakAlive && !checkedInToday && now.getHours() >= AT_RISK_FROM_HOUR
 
     return (
         <Card className="gap-0 rounded-2xl border-0 bg-gradient-to-br from-q-flame/10 to-q-panel px-4 !py-3.5 ring-1 ring-q-flame/25">
             <div className="flex items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2.5">
-                    <span className="text-xl leading-none [filter:drop-shadow(0_0_8px_rgba(249,115,22,.6))]">
+                    <span
+                        className={`text-xl leading-none ${
+                            atRisk
+                                ? 'opacity-50 grayscale'
+                                : '[filter:drop-shadow(0_0_8px_rgba(249,115,22,.6))]'
+                        }`}
+                    >
                         🔥
                     </span>
                     <div>
@@ -32,7 +67,7 @@ export function StreakCard({ snapshot, today }: StreakCardProps) {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-start gap-1">
                     {snapshot.weeklyActivity.map((on, i) => {
                         const isToday = i === 6
                         const cls = on
@@ -41,16 +76,32 @@ export function StreakCard({ snapshot, today }: StreakCardProps) {
                               ? 'border-q-accent/50 bg-q-accent/[.14]'
                               : 'border-q-border bg-q-overlay'
                         return (
-                            <span
-                                key={i}
-                                className={`flex size-[15px] items-center justify-center rounded-[5px] border text-[8px] ${cls}`}
-                            >
-                                {on ? '🔥' : ''}
+                            <span key={i} className="flex flex-col items-center gap-0.5">
+                                <span
+                                    className={`flex size-[15px] items-center justify-center rounded-[5px] border text-[8px] ${cls}`}
+                                >
+                                    {on ? '🔥' : ''}
+                                </span>
+                                <span
+                                    className={`font-mono text-[7.5px] leading-none ${
+                                        isToday ? 'text-q-accent-bright' : 'text-q-faint'
+                                    }`}
+                                >
+                                    {weekdayLetter(today, 6 - i)}
+                                </span>
                             </span>
                         )
                     })}
                 </div>
             </div>
+
+            {atRisk && (
+                <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-q-flame/30 bg-q-flame/10 px-2.5 py-1.5 text-[11px] font-medium text-q-flame-bright">
+                    <span aria-hidden>⚠️</span>
+                    Streak at risk — {formatDuration(msUntilMidnight(now))} left to
+                    check in
+                </div>
+            )}
 
             {isAdmin && (
                 <button

@@ -12,8 +12,9 @@ The gamified character-sheet dashboard at the `/` route.
 It renders a loading/error state until the snapshot is ready. Individual sections
 fetch their own cached queries as needed.
 
-Required DB migration: `src/supabase/migrations/002_home_attributes.sql`
-(adds the `attributes` table plus `profile.role` and `profile.longest_streak`).
+Required DB migrations: `src/supabase/migrations/002_home_attributes.sql`
+(adds the `attributes` table plus `profile.role` and `profile.longest_streak`) and
+`003_profile_display_name.sql` (adds `profile.display_name`).
 
 ## Layout
 
