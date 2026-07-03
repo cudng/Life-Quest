@@ -79,6 +79,8 @@ export interface DailyQuest {
   xp: number;
   active: boolean;
   position: number;
+  /** attribute this quest trains (+1 on completion), or null */
+  attribute_id: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -109,6 +111,14 @@ export interface AchievementUnlocked {
   unlocked_at: string;
 }
 
+/** One claimed daily login reward (7-day cycle; day 7 = chest). */
+export interface LoginReward {
+  /** date (YYYY-MM-DD) */
+  claimed_on: string;
+  cycle_day: number;
+  xp: number;
+}
+
 export interface Profile {
   id: 1;
   streak_count: number;
@@ -122,6 +132,8 @@ export interface Profile {
   longest_streak: number;
   /** player name shown on the HUD; falls back to the email-derived guess */
   display_name: string | null;
+  /** streak-freeze tokens held (each saves the streak across one missed day) */
+  streak_freeze_tokens: number;
 }
 
 /** Character stat bar (Home HUD): value is 0..100. */

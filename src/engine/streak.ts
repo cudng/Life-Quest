@@ -11,13 +11,52 @@ export function shiftDate(date: string, days: number): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Next streak from a check-in: +1 if yesterday, unchanged if already today, else reset to 1. */
+/** Most freeze tokens the player can hold. */
+export const MAX_FREEZE_TOKENS = 3;
+
+/**
+ * Next streak from a check-in: +1 if the last check-in was yesterday,
+ * unchanged if already today. A single missed day consumes one freeze token
+ * and continues the streak; anything longer resets to 1. Every 7th
+ * consecutive day earns one token, capped at MAX_FREEZE_TOKENS.
+ */
 export function nextStreak(
   today: string,
   lastCheckIn: string | null,
   count: number,
-): { streak_count: number; last_check_in: string } {
-  if (lastCheckIn === today) return { streak_count: count, last_check_in: today };
-  const continued = lastCheckIn === shiftDate(today, -1);
-  return { streak_count: continued ? count + 1 : 1, last_check_in: today };
+  freezeTokens: number,
+  longest: number,
+): {
+  streak_count: number;
+  last_check_in: string;
+  streak_freeze_tokens: number;
+  longest_streak: number;
+} {
+  if (lastCheckIn === today) {
+    return {
+      streak_count: count,
+      last_check_in: today,
+      streak_freeze_tokens: freezeTokens,
+      longest_streak: Math.max(longest, count),
+    };
+  }
+
+  let tokens = freezeTokens;
+  let nextCount: number;
+  if (lastCheckIn === shiftDate(today, -1)) {
+    nextCount = count + 1;
+  } else if (lastCheckIn === shiftDate(today, -2) && tokens > 0) {
+    tokens -= 1;
+    nextCount = count + 1;
+  } else {
+    nextCount = 1;
+  }
+  if (nextCount % 7 === 0 && tokens < MAX_FREEZE_TOKENS) tokens += 1;
+
+  return {
+    streak_count: nextCount,
+    last_check_in: today,
+    streak_freeze_tokens: tokens,
+    longest_streak: Math.max(longest, nextCount),
+  };
 }

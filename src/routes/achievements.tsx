@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ACHIEVEMENTS } from '@/data/achievements'
 import { useAchievementsUnlocked } from '@/data/queries'
+import { RARITY_STYLES } from '@/lib/rarity'
 
 export const Route = createFileRoute('/achievements')({
     component: Achievements,
@@ -40,15 +41,29 @@ function Achievements() {
                 {ACHIEVEMENTS.map((a) => {
                     const earnedOn = unlockedAt.get(a.id)
                     const earned = earnedOn !== undefined
+                    const rs = RARITY_STYLES[a.rarity]
                     return (
                         <li
                             key={a.id}
                             className={
                                 earned
-                                    ? 'flex flex-col items-center gap-2 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-bg)] p-5 text-center'
+                                    ? 'flex flex-col items-center gap-2 rounded-xl border bg-[var(--accent-bg)] p-5 text-center'
                                     : 'flex flex-col items-center gap-2 rounded-xl border bg-card p-5 text-center opacity-60'
                             }
+                            style={
+                                earned
+                                    ? { borderColor: rs.ring, boxShadow: rs.glow }
+                                    : undefined
+                            }
                         >
+                            <span
+                                className="font-mono text-[9px] tracking-[0.12em]"
+                                style={{
+                                    color: earned ? rs.color : undefined,
+                                }}
+                            >
+                                {rs.label}
+                            </span>
                             <span className="text-4xl">
                                 {earned ? a.icon : '🔒'}
                             </span>

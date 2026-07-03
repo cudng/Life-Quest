@@ -9,6 +9,7 @@ import { useAchievementSync } from "@/data/useAchievementSync";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { xpToLevel } from "@/engine/levels";
 import { fireConfetti } from "@/lib/reward";
+import { playFanfare } from "@/lib/sound";
 import { AchievementToasts, type ToastItem } from "./AchievementToast";
 import { LevelUpModal } from "./LevelUpModal";
 
@@ -30,6 +31,7 @@ export function RewardsLayer() {
     if (prevLevel.current !== null && level > prevLevel.current) {
       setLevelUp(level);
       fireConfetti();
+      playFanfare();
     }
     prevLevel.current = level;
   }, [snapshot]);
@@ -44,6 +46,7 @@ export function RewardsLayer() {
           key: nextKey.current++,
           icon: def?.icon ?? "🏅",
           title: def?.title ?? id,
+          rarity: def?.rarity ?? "common",
         };
       }),
     ]);

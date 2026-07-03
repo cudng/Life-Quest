@@ -19,7 +19,9 @@ INSERT INTO stages (id, track_id, title, position) VALUES
   ('cs-fundamentals', 'education', 'CS Fundamentals', 0),
   ('cs-bachelor',     'education', 'CS Bachelor',     1),
   ('job-hunt',        'career',    'Job Hunt',        0),
-  ('first-job',       'career',    'First Job',       1),
+  ('interview',       'career',    'Interview',       1),
+  ('internship',      'career',    'Internship',      2),
+  ('first-job',       'career',    'First Job',       3),
   ('portfolio',       'side-projects', 'Portfolio',   0)
 ON CONFLICT (id) DO NOTHING;
 
@@ -50,12 +52,17 @@ INSERT INTO sub_tasks (id, milestone_id, title, position) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
--- skills (roots first, then children via parent_id)
+-- skills (trunk first, then domains + children via parent_id)
 -- ---------------------------------------------------------------------------
+-- Shared trunk: everything branches from Programming (crowned origin).
 INSERT INTO skills (id, name, icon, parent_id, mastery, position) VALUES
-  ('python',     'Python',     '🐍', NULL,         'learning',  0),
-  ('javascript', 'JavaScript', '🟨', NULL,         'learning',  1),
-  ('sql',        'SQL',        '🗄️', NULL,         'learning',  2)
+  ('programming', 'Programming', '⌨️', NULL, 'expert', 0)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO skills (id, name, icon, parent_id, mastery, position) VALUES
+  ('python',     'Python',     '🐍', 'programming', 'learning',  0),
+  ('javascript', 'JavaScript', '🟨', 'programming', 'learning',  1),
+  ('sql',        'SQL',        '🗄️', 'programming', 'learning',  2)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO skills (id, name, icon, parent_id, mastery, position) VALUES

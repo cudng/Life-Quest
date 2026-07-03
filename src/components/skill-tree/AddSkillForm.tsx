@@ -1,5 +1,7 @@
 // Admin form to add a skill. Name required; icon/parent/description optional.
-// A root skill (no parent) is a language; choosing a parent makes it a subskill.
+// The tree is one shared trunk (Programming), so the parent defaults to that
+// trunk — a new node joins the tree by default. Picking "None" starts a
+// separate trunk; picking any node nests deeper (e.g. Rust → Cargo).
 // The id is a slug from the name, made unique against every existing skill id.
 // New skills start locked. Position goes to the end of its sibling group.
 
@@ -21,9 +23,14 @@ interface AddSkillFormProps {
 export function AddSkillForm({ allSkills, onClose }: AddSkillFormProps) {
   const add = useAddSkill();
 
+  // Default to the single trunk (the lone root) so new nodes join the tree; if
+  // there are several roots we can't guess, so fall back to None.
+  const roots = allSkills.filter((s) => s.parent_id === null);
+  const defaultParentId = roots.length === 1 ? roots[0].id : "";
+
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("");
-  const [parentId, setParentId] = useState("");
+  const [parentId, setParentId] = useState(defaultParentId);
   const [description, setDescription] = useState("");
   const [resources, setResources] = useState<Resource[]>([]);
 
@@ -96,7 +103,7 @@ export function AddSkillForm({ allSkills, onClose }: AddSkillFormProps) {
             onChange={(e) => setParentId(e.target.value)}
             className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
           >
-            <option value="">— None (root language) —</option>
+            <option value="">— None (new trunk) —</option>
             {allSkills.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}

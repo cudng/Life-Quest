@@ -1,15 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useProgress } from '@/data/useProgress'
-import { useIsAdmin } from '@/auth/useIsAdmin'
 import { localToday } from '@/lib/date'
 import { HudBanner } from '@/components/home/HudBanner'
 import { ActiveQuestline } from '@/components/home/ActiveQuestline'
 import { SkillTreeSummary } from '@/components/home/SkillTreeSummary'
 import { QuestLog } from '@/components/home/QuestLog'
 import { StreakCard } from '@/components/home/StreakCard'
-import { AttributesCard } from '@/components/home/AttributesCard'
+import { LoginRewardCard } from '@/components/home/LoginRewardCard'
 import { AchievementsCarousel } from '@/components/home/AchievementsCarousel'
-import { CharacterAdminDialog } from '@/components/home/CharacterAdminDialog'
 import { HomeSkeleton } from '@/components/home/HomeSkeleton'
 
 export const Route = createFileRoute('/')({
@@ -18,7 +16,6 @@ export const Route = createFileRoute('/')({
 
 function Index() {
     const { snapshot, isLoading, isError, error, refetch } = useProgress()
-    const isAdmin = useIsAdmin()
 
     if (isLoading) {
         return <HomeSkeleton />
@@ -49,24 +46,23 @@ function Index() {
 
     return (
         <div className="mx-auto flex max-w-[1180px] flex-col gap-3.5 px-6 py-5">
-            {isAdmin && (
-                <div className="flex justify-end">
-                    <CharacterAdminDialog />
+            {/* row 1: HUD + actionable sidebar, equal height */}
+            <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1fr_300px] lg:items-stretch">
+                <HudBanner snapshot={snapshot} />
+                {/* lg: pinned to the row so the HUD alone sets the height */}
+                <div className="lg:relative">
+                    <div className="flex min-h-0 flex-col gap-3.5 lg:absolute lg:inset-0">
+                        <StreakCard snapshot={snapshot} today={today} />
+                        <LoginRewardCard snapshot={snapshot} today={today} />
+                        <QuestLog snapshot={snapshot} today={today} />
+                    </div>
                 </div>
-            )}
+            </div>
 
-            <HudBanner snapshot={snapshot} />
-
-            <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1fr_340px] lg:items-start">
-                <div className="flex min-w-0 flex-col gap-3.5">
-                    <ActiveQuestline />
-                    <SkillTreeSummary />
-                </div>
-                <div className="flex flex-col gap-3.5">
-                    <QuestLog snapshot={snapshot} today={today} />
-                    <StreakCard snapshot={snapshot} today={today} />
-                    <AttributesCard />
-                </div>
+            {/* row 2: Roadmap + Skills side by side */}
+            <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2 lg:items-stretch">
+                <ActiveQuestline />
+                <SkillTreeSummary />
             </div>
 
             <AchievementsCarousel snapshot={snapshot} />

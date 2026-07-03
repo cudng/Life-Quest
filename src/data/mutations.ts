@@ -268,6 +268,8 @@ export function useDeleteSkill() {
  * Mark a quest done (insert) or undone (delete) for the given local date.
  * Optimistic: the cached completions list is patched immediately so the UI
  * flips without waiting for the round-trip, then rolled back on error.
+ * A quest linked to an attribute also bumps it +1 (or -1 on uncheck),
+ * clamped to the 0..100 stat range.
  */
 export function useToggleDailyQuest() {
   const qc = useQueryClient();
@@ -276,6 +278,7 @@ export function useToggleDailyQuest() {
       questId: string;
       today: string;
       completed: boolean;
+      attributeId?: string | null;
     }) => {
       if (vars.completed) {
         const { error } = await supabase
@@ -289,6 +292,23 @@ export function useToggleDailyQuest() {
           .eq("quest_id", vars.questId)
           .eq("completed_on", vars.today);
         if (error) throw error;
+      }
+      if (vars.attributeId) {
+        const { data, error } = await supabase
+          .from("attributes")
+          .select("value")
+          .eq("id", vars.attributeId)
+          .single<Pick<Attribute, "value">>();
+        if (error) throw error;
+        const bumped = Math.min(
+          100,
+          Math.max(0, data.value + (vars.completed ? 1 : -1)),
+        );
+        const { error: attrError } = await supabase
+          .from("attributes")
+          .update({ value: bumped })
+          .eq("id", vars.attributeId);
+        if (attrError) throw attrError;
       }
     },
     onMutate: async (vars) => {
@@ -323,8 +343,11 @@ export function useToggleDailyQuest() {
         qc.setQueryData(queryKeys.dailyCompletions, ctx.previous);
       }
     },
-    onSettled: () => {
+    onSettled: (_data, _err, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.dailyCompletions });
+      if (vars.attributeId) {
+        void qc.invalidateQueries({ queryKey: queryKeys.attributes });
+      }
     },
   });
 }
@@ -402,6 +425,32 @@ export function useUnlockAchievements() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.achievementsUnlocked });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Login rewards
+// ---------------------------------------------------------------------------
+
+/** Claim today's login reward. The date PK enforces at most one claim per day. */
+export function useClaimLoginReward() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: {
+      today: string;
+      cycleDay: number;
+      xp: number;
+    }) => {
+      const { error } = await supabase.from("login_rewards").insert({
+        claimed_on: vars.today,
+        cycle_day: vars.cycleDay,
+        xp: vars.xp,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.loginRewards });
     },
   });
 }
@@ -495,8 +544,16 @@ export function useStreakCheckIn() {
       today: string;
       lastCheckIn: string | null;
       streakCount: number;
+      freezeTokens: number;
+      longest: number;
     }) => {
-      const next = nextStreak(vars.today, vars.lastCheckIn, vars.streakCount);
+      const next = nextStreak(
+        vars.today,
+        vars.lastCheckIn,
+        vars.streakCount,
+        vars.freezeTokens,
+        vars.longest,
+      );
       const { error } = await supabase.from("profile").update(next).eq("id", 1);
       if (error) throw error;
     },

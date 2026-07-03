@@ -8,6 +8,7 @@ import { MilestoneDetail } from '@/components/roadmap/MilestoneDetail'
 import { AddMilestoneForm } from '@/components/roadmap/AddMilestoneForm'
 import { AddStageForm } from '@/components/roadmap/AddStageForm'
 import { AddTrackForm } from '@/components/roadmap/AddTrackForm'
+import { FANTASY, Medallion } from '@/components/ui/talent'
 import { useIsAdmin } from '@/auth/useIsAdmin'
 
 export const Route = createFileRoute('/roadmap')({
@@ -46,11 +47,18 @@ function Roadmap() {
     )
 
     if (isLoading) {
-        return <div className="p-6 text-muted-foreground">Loading…</div>
+        return (
+            <div
+                className="p-6 font-mono text-sm tracking-wide"
+                style={{ color: FANTASY.goldDim }}
+            >
+                Charting the journey…
+            </div>
+        )
     }
     if (isError || !snapshot) {
         return (
-            <div className="p-6 text-destructive">
+            <div className="p-6 font-mono text-sm text-destructive">
                 Failed to load: {error?.message ?? 'unknown error'}
             </div>
         )
@@ -84,32 +92,35 @@ function Roadmap() {
 
     return (
         <div className="flex h-[calc(100svh-64px)] flex-col p-4 text-left">
-            <div className="flex flex-wrap items-center gap-2">
-                {allTracks.map((t) => {
-                    const active = t.id === activeTrackId
-                    return (
-                        <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => switchTrack(t.id)}
-                            className={
-                                active
-                                    ? 'rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground'
-                                    : 'rounded-md border px-3 py-1.5 text-sm text-foreground hover:bg-secondary'
-                            }
-                        >
-                            {t.icon ? `${t.icon} ` : ''}
-                            {t.title}
-                        </button>
-                    )
-                })}
+            <div className="flex items-center gap-2.5">
+                <Medallion metal="gold" size={34}>
+                    ⚑
+                </Medallion>
+                <div className="leading-tight">
+                    <p
+                        className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                        style={{ color: FANTASY.eyebrow }}
+                    >
+                        Journey
+                    </p>
+                    <h1
+                        className="font-serif text-base font-semibold leading-tight"
+                        style={{
+                            color: FANTASY.goldText,
+                            textShadow: '0 1px 2px rgba(0,0,0,.6)',
+                        }}
+                    >
+                        Roadmap
+                    </h1>
+                </div>
 
                 {isAdmin && (
                     <div className="ml-auto flex items-center gap-2">
                         <button
                             type="button"
                             onClick={() => openPanel('track')}
-                            className="rounded-md border px-3 py-1.5 text-sm text-foreground hover:bg-secondary"
+                            className="rounded-md border border-[#db5f10]/40 bg-gradient-to-b from-[#1b1712] to-[#100c08] px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors hover:border-[#db5f10]/70"
+                            style={{ color: FANTASY.emberText }}
                         >
                             ＋ Track
                         </button>
@@ -117,7 +128,8 @@ function Roadmap() {
                             type="button"
                             disabled={!activeTrackId}
                             onClick={() => openPanel('stage')}
-                            className="rounded-md border px-3 py-1.5 text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                            className="rounded-md border border-[#db5f10]/40 bg-gradient-to-b from-[#1b1712] to-[#100c08] px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors hover:border-[#db5f10]/70 disabled:opacity-50"
+                            style={{ color: FANTASY.emberText }}
                         >
                             ＋ Stage
                         </button>
@@ -125,7 +137,8 @@ function Roadmap() {
                             type="button"
                             disabled={!activeTrackId}
                             onClick={() => openPanel('milestone')}
-                            className="rounded-md border px-3 py-1.5 text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                            className="rounded-md border border-[#db5f10]/40 bg-gradient-to-b from-[#1b1712] to-[#100c08] px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors hover:border-[#db5f10]/70 disabled:opacity-50"
+                            style={{ color: FANTASY.emberText }}
                         >
                             ＋ Milestone
                         </button>
@@ -133,13 +146,50 @@ function Roadmap() {
                 )}
             </div>
 
-            <div className="mt-4 flex min-h-0 flex-1 overflow-hidden rounded-xl border">
+            {allTracks.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {allTracks.map((t) => {
+                        const active = t.id === activeTrackId
+                        return (
+                            <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => switchTrack(t.id)}
+                                className={
+                                    active
+                                        ? 'rounded-md border border-[#db5f10]/55 bg-gradient-to-b from-[#241a0e] to-[#140d06] px-3 py-1.5 font-mono text-xs uppercase tracking-wider'
+                                        : 'rounded-md border border-[#4c4c55]/40 bg-gradient-to-b from-[#1b1712] to-[#100c08] px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors hover:border-[#4c4c55]/70'
+                                }
+                                style={{
+                                    color: active
+                                        ? FANTASY.emberText
+                                        : FANTASY.goldDim,
+                                }}
+                            >
+                                {t.icon ? `${t.icon} ` : ''}
+                                {t.title}
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
+
+            <div
+                className="mt-4 flex min-h-0 flex-1 overflow-hidden rounded-xl"
+                style={{
+                    background: '#0a0705',
+                    boxShadow: 'inset 0 0 0 1px rgba(160,120,50,.25)',
+                }}
+            >
                 <div className="min-w-0 flex-1">
                     {nodes.length === 0 ? (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                        <div
+                            className="flex h-full items-center justify-center font-serif text-sm"
+                            style={{ color: FANTASY.goldFaint }}
+                        >
                             {allTracks.length === 0
-                                ? 'No tracks yet.'
-                                : 'No milestones in this track yet.'}
+                                ? 'No tracks charted yet.'
+                                : 'No milestones on this path yet.'}
                         </div>
                     ) : (
                         <RoadmapCanvas

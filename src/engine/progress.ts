@@ -12,6 +12,7 @@ import type {
   AchievementUnlocked,
   Profile,
   Mastery,
+  LoginReward,
 } from "@/data/types";
 import { xpToLevel, xpForLevel } from "@/engine/levels";
 import { addDays } from "@/lib/date";
@@ -23,6 +24,14 @@ const MASTERY_XP: Record<Mastery, number> = {
   proficient: 150,
   expert: 300,
 };
+
+/**
+ * Flat bonus XP for each "perfect day": a day on which every currently-active
+ * daily quest was completed. Judged against the current active set, so
+ * (de)activating quests can re-classify past days — acceptable for a
+ * single-player derived stat.
+ */
+export const PERFECT_DAY_BONUS_XP = 50;
 
 /** In-memory snapshot derived each render from fetched rows. Not stored. */
 export interface ProgressSnapshot {
@@ -40,11 +49,17 @@ export interface ProgressSnapshot {
   displayName: string | null;
   /** best streak ever reached */
   longestStreak: number;
+  /** streak-freeze tokens held (each saves the streak across one missed day) */
+  streakFreezeTokens: number;
   /**
    * Last 7 days of activity for the streak dots, oldest → today (index 6 = today).
    * A day is active when ≥1 daily quest was completed on it.
    */
   weeklyActivity: boolean[];
+  /** Days on which every active daily quest was completed (bonus XP each). */
+  perfectDays: number;
+  /** Most recent claimed login reward (drives the 7-day calendar), or null. */
+  lastLoginReward: { claimedOn: string; cycleDay: number } | null;
 }
 
 /** Raw rows fetched from Supabase, plus today's date (YYYY-MM-DD). */
@@ -56,6 +71,7 @@ export interface ProgressInput {
   dailyCompletions: DailyCompletion[];
   jobApplications: JobApplication[];
   unlockedAchievements: AchievementUnlocked[];
+  loginRewards: LoginReward[];
   profile: Profile;
   today: string;
 }
@@ -80,8 +96,37 @@ export function buildSnapshot(input: ProgressInput): ProgressSnapshot {
     activeDays.has(addDays(input.today, i - 6)),
   );
 
+  const activeQuestIds = input.dailyQuests
+    .filter((q) => q.active)
+    .map((q) => q.id);
+  const completionsByDay = new Map<string, Set<string>>();
+  for (const c of input.dailyCompletions) {
+    let day = completionsByDay.get(c.completed_on);
+    if (!day) completionsByDay.set(c.completed_on, (day = new Set()));
+    day.add(c.quest_id);
+  }
+  let perfectDays = 0;
+  if (activeQuestIds.length > 0) {
+    for (const day of completionsByDay.values()) {
+      if (activeQuestIds.every((id) => day.has(id))) perfectDays++;
+    }
+  }
+
+  const loginXp = input.loginRewards.reduce((sum, r) => sum + r.xp, 0);
+  let lastLoginReward: ProgressSnapshot["lastLoginReward"] = null;
+  for (const r of input.loginRewards) {
+    if (!lastLoginReward || r.claimed_on > lastLoginReward.claimedOn) {
+      lastLoginReward = { claimedOn: r.claimed_on, cycleDay: r.cycle_day };
+    }
+  }
+
   return {
-    totalXp: milestoneXp + skillXp + dailyXp,
+    totalXp:
+      milestoneXp +
+      skillXp +
+      dailyXp +
+      loginXp +
+      perfectDays * PERFECT_DAY_BONUS_XP,
     completedNodeIds: completedMilestones.map((m) => m.id),
     completedSubTaskIds: input.subTasks.filter((t) => t.completed).map((t) => t.id),
     skillMastery,
@@ -97,7 +142,10 @@ export function buildSnapshot(input: ProgressInput): ProgressSnapshot {
     role: input.profile.role,
     displayName: input.profile.display_name,
     longestStreak: input.profile.longest_streak,
+    streakFreezeTokens: input.profile.streak_freeze_tokens,
     weeklyActivity,
+    perfectDays,
+    lastLoginReward,
   };
 }
 

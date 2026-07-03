@@ -1,65 +1,152 @@
+// Home preview of the skill tree: just the first level. The shared Programming
+// trunk sits at the bottom and conduits grow upward to its domain roots
+// (Python, JavaScript, SQL, …). Deeper skills are NOT drawn here — a small row
+// of dots above a domain hints how many child talents wait down that branch.
+// Preview only (PROJECT.md → SKILLS TREE §5); "Enter tree →" opens the full
+// canvas. Built from the shared dark-fantasy primitives; state reads via metal,
+// conduits glow gold when allocated (domain unlocked) and stay dashed iron when
+// locked.
+
+import type { CSSProperties } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import {
+    FANTASY,
+    Medallion,
+    Pips,
+    TalentSlab,
+    type Metal,
+    type PipState,
+} from '@/components/ui/talent'
 import { useSkills } from '@/data/queries'
 import type { Mastery, Skill } from '@/data/types'
 
-const CHILD_CLASS: Record<Mastery, string> = {
-    expert: 'border border-q-accent bg-q-accent/[.14]',
-    proficient: 'border border-q-accent bg-q-accent/[.14]',
-    learning: 'border border-dashed border-q-accent-bright/40 bg-q-accent-bright/[.06]',
-    locked: 'border border-q-border-strong bg-q-panel-locked opacity-55',
+const MASTERY_METAL: Record<Mastery, Metal> = {
+    expert: 'gold',
+    proficient: 'bronze',
+    learning: 'ember',
+    locked: 'iron',
 }
 
-function MasteryDot({ mastery }: { mastery: Mastery }) {
-    if (mastery === 'locked') return <span className="shrink-0 text-[11px]">🔒</span>
-    if (mastery === 'expert')
-        return (
-            <span className="size-[7px] shrink-0 rounded-full bg-q-accent-bright shadow-[0_0_8px_var(--q-accent-bright)]" />
-        )
-    if (mastery === 'proficient')
-        return <span className="size-[7px] shrink-0 rounded-full bg-q-accent" />
+const isMastered = (m: Mastery) => m === 'proficient' || m === 'expert'
+
+const pipState = (m: Mastery): PipState =>
+    isMastered(m) ? 'lit' : m === 'learning' ? 'ember' : 'off'
+
+const badgeFor = (m: Mastery) =>
+    m === 'expert' ? '♛' : m === 'locked' ? '🔒' : undefined
+
+// Preview slice caps.
+const MAX_DOMAINS = 6
+const MAX_DOTS = 4
+
+// Geometry (px). Two tiers: trunk (bottom) and its domains (above).
+const TRUNK = 46
+const DOMAIN = 40
+const SLOT = 92
+const PAD_X = 16
+const Y_DOMAIN = 56
+const Y_TRUNK = 150
+const HEIGHT = 196
+
+/** One conduit between the trunk and a domain, as a vertical S-curve. */
+function Conduit({
+    px,
+    py,
+    cx,
+    cy,
+    active,
+}: {
+    px: number
+    py: number
+    cx: number
+    cy: number
+    active: boolean
+}) {
+    const my = (py + cy) / 2
     return (
-        <span className="size-[7px] shrink-0 rounded-full border border-dashed border-q-accent-bright" />
+        <path
+            d={`M ${px} ${py} C ${px} ${my}, ${cx} ${my}, ${cx} ${cy}`}
+            fill="none"
+            strokeLinecap="round"
+            stroke={active ? '#d9a341' : '#3a3a42'}
+            strokeWidth={active ? 2.5 : 2}
+            strokeDasharray={active ? undefined : '1 7'}
+            style={
+                active
+                    ? { filter: 'drop-shadow(0 0 3px rgba(224,168,72,.6))' }
+                    : undefined
+            }
+        />
     )
 }
 
-function ChildPill({ skill }: { skill: Skill }) {
+/**
+ * A medallion centered on (x, y) with an optional label and a row of depth dots
+ * above it. The label sits below by default, or above (`labelAbove`) to clear a
+ * conduit entering from below.
+ */
+function TreeNode({
+    x,
+    y,
+    size,
+    metal,
+    icon,
+    name,
+    badge,
+    dim,
+    pulse,
+    faint,
+    labelAbove,
+    dots,
+}: {
+    x: number
+    y: number
+    size: number
+    metal: Metal
+    icon: string
+    name: string
+    badge?: string
+    dim?: boolean
+    pulse?: boolean
+    faint?: boolean
+    labelAbove?: boolean
+    dots?: PipState[]
+}) {
+    const labelPos: CSSProperties = labelAbove
+        ? { bottom: '100%', marginBottom: 3 }
+        : { top: '100%', marginTop: 3 }
     return (
-        <div className="flex items-center">
-            <div className="h-0.5 w-1.5 shrink-0 bg-q-line" />
-            <div
-                className={`flex min-w-0 flex-1 items-center gap-1.5 rounded-[9px] px-2 py-1.5 ${CHILD_CLASS[skill.mastery]}`}
-            >
-                <span className="text-xs">{skill.icon}</span>
-                <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-q-fg">
-                    {skill.name}
-                </span>
-                <MasteryDot mastery={skill.mastery} />
-            </div>
-        </div>
-    )
-}
-
-function Branch({ root, items }: { root: Skill; items: Skill[] }) {
-    const expert = root.mastery === 'expert'
-    return (
-        <div className="flex min-w-[200px] flex-1 items-center">
-            <div
-                className={`flex size-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl ${
-                    expert
-                        ? 'border-[1.5px] border-q-accent-bright bg-q-accent/[.18] shadow-[0_0_14px_rgba(129,140,248,.5)]'
-                        : 'border border-q-accent bg-q-accent/[.14]'
-                }`}
-            >
-                <span className="text-base">{root.icon}</span>
-                <span className="font-mono text-[7.5px] text-q-accent-fg">{root.name}</span>
-            </div>
-            <div className="h-0.5 w-2 shrink-0 bg-q-line" />
-            <div className="my-3 w-0.5 shrink-0 self-stretch bg-q-line" />
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-                {items.map((c) => (
-                    <ChildPill key={c.id} skill={c} />
-                ))}
+        <div
+            className="absolute flex justify-center"
+            style={{ left: x - SLOT / 2, top: y - size / 2, width: SLOT }}
+        >
+            <div className="relative">
+                {dots && dots.length > 0 && (
+                    <div className="absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2">
+                        <Pips states={dots} />
+                    </div>
+                )}
+                <Medallion
+                    metal={metal}
+                    size={size}
+                    badge={badge}
+                    dim={dim}
+                    pulse={pulse}
+                >
+                    {icon}
+                </Medallion>
+                <div
+                    className="absolute left-1/2 -translate-x-1/2 truncate text-center font-serif text-[10px] font-semibold tracking-wide"
+                    style={{
+                        width: SLOT,
+                        ...labelPos,
+                        color: faint ? FANTASY.goldFaint : FANTASY.goldText,
+                        textShadow: '0 1px 2px rgba(0,0,0,.6)',
+                    }}
+                >
+                    {name}
+                </div>
             </div>
         </div>
     )
@@ -70,44 +157,138 @@ export function SkillTreeSummary() {
     if (!skills.data) return null
 
     const all = skills.data
-    const roots = all
-        .filter((s) => s.parent_id === null)
-        .sort((a, b) => a.position - b.position)
-    const childrenOf = (id: string) =>
+    const childrenOf = (id: string): Skill[] =>
         all.filter((s) => s.parent_id === id).sort((a, b) => a.position - b.position)
+
+    const root = all
+        .filter((s) => s.parent_id === null)
+        .sort((a, b) => a.position - b.position)[0]
+    if (!root) return null
 
     const unlocked = all.filter((s) => s.mastery !== 'locked').length
     const learning = all.filter((s) => s.mastery === 'learning').length
 
+    const domainsAll = childrenOf(root.id)
+    const domains = domainsAll.slice(0, MAX_DOMAINS)
+    const extraDomains = domainsAll.length - domains.length
+    const cols = domains.length + (extraDomains > 0 ? 1 : 0)
+
+    const xOf = (col: number) => PAD_X + col * SLOT + SLOT / 2
+    const width = PAD_X * 2 + Math.max(cols, 1) * SLOT
+    // Trunk centers under the span of domains (evenly spaced → midpoint of ends).
+    const trunkX =
+        domains.length > 0 ? (xOf(0) + xOf(domains.length - 1)) / 2 : width / 2
+
     return (
         <Card className="gap-0 rounded-2xl border-0 bg-q-panel px-[18px] !py-4 ring-1 ring-q-border">
-            <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                    <div className="mb-[5px] font-mono text-[10px] tracking-[0.1em] text-q-accent">
-                        SKILL TREE
+                    <div
+                        className="mb-[5px] font-mono text-[10px] tracking-[0.18em]"
+                        style={{ color: FANTASY.eyebrow }}
+                    >
+                        TALENT TREE
                     </div>
-                    <div className="text-[15px] font-semibold text-q-fg">
-                        {unlocked} of {all.length} skills unlocked
+                    <div className="font-serif text-[15px] font-semibold text-q-fg">
+                        {unlocked} of {all.length} talents forged
                     </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2.5">
-                    <span className="whitespace-nowrap rounded-full bg-q-accent/[.12] px-2.5 py-[3px] font-mono text-[11.5px] text-q-accent-bright">
+                    <span
+                        className="whitespace-nowrap rounded-full px-2.5 py-[3px] font-mono text-[11px]"
+                        style={{
+                            color: FANTASY.emberText,
+                            background: 'rgba(217,96,16,.12)',
+                            boxShadow: 'inset 0 0 0 1px rgba(217,120,40,.3)',
+                        }}
+                    >
                         {learning} learning
                     </span>
                     <Link
                         to="/skill-tree"
-                        className="whitespace-nowrap text-xs text-q-accent-bright hover:underline"
+                        className="whitespace-nowrap text-xs hover:underline"
+                        style={{ color: FANTASY.goldLink }}
                     >
-                        Open tree →
+                        Enter tree →
                     </Link>
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-stretch gap-x-3 gap-y-4">
-                {roots.map((root) => (
-                    <Branch key={root.id} root={root} items={childrenOf(root.id)} />
-                ))}
-            </div>
+            <TalentSlab className="justify-center overflow-x-auto">
+                <div className="relative mx-auto" style={{ width, height: HEIGHT }}>
+                    <svg
+                        className="pointer-events-none absolute inset-0"
+                        width={width}
+                        height={HEIGHT}
+                    >
+                        {domains.map((domain, i) => (
+                            <Conduit
+                                key={domain.id}
+                                px={trunkX}
+                                py={Y_TRUNK - TRUNK / 2}
+                                cx={xOf(i)}
+                                cy={Y_DOMAIN + DOMAIN / 2}
+                                active={domain.mastery !== 'locked'}
+                            />
+                        ))}
+                        {extraDomains > 0 && (
+                            <Conduit
+                                px={trunkX}
+                                py={Y_TRUNK - TRUNK / 2}
+                                cx={xOf(domains.length)}
+                                cy={Y_DOMAIN + DOMAIN / 2}
+                                active={false}
+                            />
+                        )}
+                    </svg>
+
+                    {/* Domains (first level) */}
+                    {domains.map((domain, i) => (
+                        <TreeNode
+                            key={domain.id}
+                            x={xOf(i)}
+                            y={Y_DOMAIN}
+                            size={DOMAIN}
+                            metal={MASTERY_METAL[domain.mastery]}
+                            icon={domain.icon}
+                            name={domain.name}
+                            badge={badgeFor(domain.mastery)}
+                            dim={domain.mastery === 'locked'}
+                            pulse={domain.mastery === 'learning'}
+                            dots={childrenOf(domain.id)
+                                .slice(0, MAX_DOTS)
+                                .map((c) => pipState(c.mastery))}
+                        />
+                    ))}
+
+                    {/* "+k more branches" ghost domain */}
+                    {extraDomains > 0 && (
+                        <TreeNode
+                            x={xOf(domains.length)}
+                            y={Y_DOMAIN}
+                            size={DOMAIN}
+                            metal="iron"
+                            icon={`+${extraDomains}`}
+                            name="more"
+                            dim
+                            faint
+                        />
+                    )}
+
+                    {/* Trunk (bottom) */}
+                    <TreeNode
+                        x={trunkX}
+                        y={Y_TRUNK}
+                        size={TRUNK}
+                        metal={MASTERY_METAL[root.mastery]}
+                        icon={root.icon}
+                        name={root.name}
+                        badge={badgeFor(root.mastery)}
+                        dim={root.mastery === 'locked'}
+                        pulse={root.mastery === 'learning'}
+                    />
+                </div>
+            </TalentSlab>
         </Card>
     )
 }

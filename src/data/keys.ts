@@ -13,4 +13,5 @@ export const queryKeys = {
   achievementsUnlocked: ["achievements_unlocked"] as const,
   profile: ["profile"] as const,
   attributes: ["attributes"] as const,
+  loginRewards: ["login_rewards"] as const,
 } as const;

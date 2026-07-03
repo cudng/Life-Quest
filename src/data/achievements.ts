@@ -10,11 +10,15 @@ export interface AchievementProgress {
   target: number;
 }
 
+/** RPG-style rarity tier; drives the colored glow (see lib/rarity.ts). */
+export type Rarity = "common" | "rare" | "epic" | "legendary";
+
 export interface Achievement {
   id: string;
   title: string;
   description: string;
   icon: string;
+  rarity: Rarity;
   condition: (p: ProgressSnapshot) => boolean;
   /** Numeric progress toward the unlock (drives the "next unlock" hint). */
   progress: (p: ProgressSnapshot) => AchievementProgress;
@@ -31,6 +35,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "First Steps",
     description: "Complete your first milestone.",
     icon: "👣",
+    rarity: "common",
     condition: (p) => p.completedNodeIds.length >= 1,
     progress: (p) => ({ current: p.completedNodeIds.length, target: 1 }),
   },
@@ -39,6 +44,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "Trailblazer",
     description: "Complete 10 milestones.",
     icon: "🧭",
+    rarity: "rare",
     condition: (p) => p.completedNodeIds.length >= 10,
     progress: (p) => ({ current: p.completedNodeIds.length, target: 10 }),
   },
@@ -47,6 +53,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "Apprentice",
     description: "Reach level 5.",
     icon: "⭐",
+    rarity: "rare",
     condition: (p) => xpToLevel(p.totalXp) >= 5,
     progress: (p) => ({ current: xpToLevel(p.totalXp), target: 5 }),
   },
@@ -55,6 +62,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "Polyglot",
     description: "Reach proficient or higher in 3 skills.",
     icon: "🧠",
+    rarity: "epic",
     condition: (p) => masteredCount(p) >= 3,
     progress: (p) => ({ current: masteredCount(p), target: 3 }),
   },
@@ -63,6 +71,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "On the Hunt",
     description: "Log your first job application.",
     icon: "🎯",
+    rarity: "common",
     condition: (p) => p.jobApplications.length >= 1,
     progress: (p) => ({ current: p.jobApplications.length, target: 1 }),
   },
@@ -71,6 +80,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "In the Room",
     description: "Land your first interview.",
     icon: "🤝",
+    rarity: "rare",
     condition: (p) => p.jobApplications.some((j) => j.status === "interview"),
     progress: (p) => ({
       current: p.jobApplications.some((j) => j.status === "interview") ? 1 : 0,
@@ -82,6 +92,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "The Offer",
     description: "Receive your first job offer.",
     icon: "🏆",
+    rarity: "legendary",
     condition: (p) => p.jobApplications.some((j) => j.status === "offer"),
     progress: (p) => ({
       current: p.jobApplications.some((j) => j.status === "offer") ? 1 : 0,
@@ -93,6 +104,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "Consistency",
     description: "Reach a 7-day streak.",
     icon: "🔥",
+    rarity: "rare",
     condition: (p) => p.streak.count >= 7,
     progress: (p) => ({ current: p.streak.count, target: 7 }),
   },
@@ -101,6 +113,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: "Unstoppable",
     description: "Reach a 30-day streak.",
     icon: "🌟",
+    rarity: "epic",
     condition: (p) => p.streak.count >= 30,
     progress: (p) => ({ current: p.streak.count, target: 30 }),
   },

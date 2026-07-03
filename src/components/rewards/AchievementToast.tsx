@@ -4,11 +4,14 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import type { Rarity } from "@/data/achievements";
+import { RARITY_STYLES } from "@/lib/rarity";
 
 export interface ToastItem {
   key: number;
   icon: string;
   title: string;
+  rarity: Rarity;
 }
 
 const DISMISS_MS = 4000;
@@ -24,6 +27,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
     return () => clearTimeout(t);
   }, [toast.key, onDismiss]);
 
+  const rs = RARITY_STYLES[toast.rarity];
   return (
     <motion.div
       layout
@@ -32,12 +36,16 @@ function Toast({ toast, onDismiss }: ToastProps) {
       exit={{ opacity: 0, x: 48 }}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
       onClick={() => onDismiss(toast.key)}
-      className="flex w-72 cursor-pointer items-center gap-3 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-bg)] p-4 text-left shadow-lg"
+      className="flex w-72 cursor-pointer items-center gap-3 rounded-xl border bg-[var(--accent-bg)] p-4 text-left shadow-lg"
+      style={{ borderColor: rs.ring, boxShadow: rs.glow }}
     >
       <span className="text-3xl">{toast.icon}</span>
       <div>
-        <div className="text-xs uppercase tracking-wide text-[var(--accent)]">
-          Achievement unlocked
+        <div
+          className="text-xs uppercase tracking-wide"
+          style={{ color: rs.color }}
+        >
+          {rs.label} · Achievement unlocked
         </div>
         <div className="font-medium text-foreground">{toast.title}</div>
       </div>

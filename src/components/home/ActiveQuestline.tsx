@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import { FANTASY, Medallion, TalentSlab, type Metal } from '@/components/ui/talent'
 import { useTracks, useStages, useMilestones } from '@/data/queries'
 import type { Milestone, Stage } from '@/data/types'
 
@@ -13,28 +14,16 @@ interface QuestNode {
     xp: number
 }
 
-const STATUS_ICON: Record<StageStatus, string> = {
+const STATUS_GLYPH: Record<StageStatus, string> = {
     done: '✓',
     active: '▶',
     locked: '🔒',
 }
 
-const NODE_CLASS: Record<StageStatus, string> = {
-    done: 'border border-q-accent bg-q-accent/[.18] shadow-[0_0_10px_rgba(99,102,241,.4)]',
-    active: 'border-[1.5px] border-q-accent-bright bg-q-accent-bright/[.18]',
-    locked: 'border border-q-border-strong bg-q-panel-locked',
-}
-
-const LABEL_CLASS: Record<StageStatus, string> = {
-    done: 'text-q-muted',
-    active: 'text-q-fg',
-    locked: 'text-q-faint',
-}
-
-const XP_CLASS: Record<StageStatus, string> = {
-    done: 'text-q-accent',
-    active: 'text-q-accent-bright',
-    locked: 'text-q-faint',
+const STATUS_METAL: Record<StageStatus, Metal> = {
+    done: 'gold',
+    active: 'ember',
+    locked: 'iron',
 }
 
 /** milestones grouped by stage id */
@@ -71,35 +60,51 @@ function buildNodes(
     return { nodes, activeIndex }
 }
 
-function StageNode({ node, last }: { node: QuestNode; last: boolean }) {
-    const connClass =
-        node.status === 'done'
-            ? 'bg-q-accent'
-            : node.status === 'active'
-              ? 'bg-gradient-to-r from-q-accent-bright to-q-line'
-              : 'bg-q-track'
+// Timeline geometry (px). Nodes are evenly spaced along one horizontal conduit.
+const NODE = 46
+const SLOT = 96
+const PAD_X = 16
+const CY = 29 // node center y — the connecting line runs through here
+const MAP_H = 100
+
+/** A stage node placed at (x, CY): medallion + title + XP, label below. */
+function StageNode({ x, node }: { x: number; node: QuestNode }) {
     return (
-        <>
-            <div className="dq-node flex w-[62px] shrink-0 cursor-default flex-col items-center gap-2.5 transition-transform">
-                <div
-                    className={`flex size-[46px] items-center justify-center rounded-[13px] text-[17px] ${NODE_CLASS[node.status]}`}
-                    style={node.status === 'active' ? { animation: 'dq-pulse 2.2s infinite' } : undefined}
-                >
-                    {STATUS_ICON[node.status]}
-                </div>
-                <div className="text-center">
-                    <div
-                        className={`whitespace-nowrap text-[11px] font-medium leading-tight ${LABEL_CLASS[node.status]}`}
-                    >
-                        {node.name}
-                    </div>
-                    <div className={`mt-0.5 font-mono text-[9.5px] ${XP_CLASS[node.status]}`}>
-                        {node.status === 'locked' ? `${node.xp} XP` : `+${node.xp}`}
-                    </div>
-                </div>
+        <div
+            className="absolute flex flex-col items-center gap-1"
+            style={{ left: x - SLOT / 2, top: CY - NODE / 2, width: SLOT }}
+        >
+            <Medallion
+                metal={STATUS_METAL[node.status]}
+                size={NODE}
+                pulse={node.status === 'active'}
+                dim={node.status === 'locked'}
+            >
+                {STATUS_GLYPH[node.status]}
+            </Medallion>
+            <div
+                className="w-full truncate px-1 text-center font-serif text-[11px] font-semibold leading-tight tracking-wide"
+                style={{
+                    color: node.status === 'locked' ? FANTASY.goldFaint : FANTASY.goldText,
+                    textShadow: '0 1px 2px rgba(0,0,0,.6)',
+                }}
+            >
+                {node.name}
             </div>
-            {!last && <div className={`mt-[22px] h-0.5 min-w-2 flex-1 ${connClass}`} />}
-        </>
+            <div
+                className="font-mono text-[9px] tracking-wide"
+                style={{
+                    color:
+                        node.status === 'active'
+                            ? FANTASY.emberText
+                            : node.status === 'done'
+                              ? FANTASY.goldDim
+                              : FANTASY.goldFaint,
+                }}
+            >
+                {node.status === 'locked' ? `${node.xp} XP` : `+${node.xp}`}
+            </div>
+        </div>
     )
 }
 
@@ -136,14 +141,6 @@ export function ActiveQuestline() {
             .sort((a, b) => a.position - b.position)
         const { nodes, activeIndex } = buildNodes(trackStages, byStage)
 
-        const allMs = trackStages.flatMap((s) => byStage.get(s.id) ?? [])
-        const percent =
-            allMs.length === 0
-                ? 0
-                : Math.round(
-                      (allMs.filter((m) => m.completed).length / allMs.length) * 100,
-                  )
-
         // Current objective: first incomplete milestone at/after the active stage.
         const startIdx = activeIndex === -1 ? trackStages.length : activeIndex
         let objective: Milestone | null = null
@@ -151,7 +148,7 @@ export function ActiveQuestline() {
             objective =
                 (byStage.get(trackStages[i].id) ?? []).find((m) => !m.completed) ?? null
         }
-        return { nodes, percent, objective }
+        return { nodes, objective }
     }, [trackId, stages.data, byStage])
 
     if (!tracks.data || !stages.data || !milestones.data || !trackId || !model) {
@@ -161,18 +158,32 @@ export function ActiveQuestline() {
     const track = tracks.data.find((t) => t.id === trackId)
 
     return (
-        <Card className="relative gap-0 overflow-hidden rounded-2xl border-0 bg-q-panel px-5 !py-[18px] ring-1 ring-q-border">
+        <Card className="gap-0 rounded-2xl border-0 bg-q-panel px-[18px] !py-4 ring-1 ring-q-border">
             {/* header row */}
-            <div className="mb-1 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-[10px] tracking-[0.12em] text-q-accent">
-                        ACTIVE QUESTLINE
-                    </span>
-                    <span className="rounded-full bg-q-accent/[.12] px-2 py-0.5 font-mono text-[10.5px] text-q-accent-bright">
-                        {model.percent}%
-                    </span>
-                </div>
-                <div className="flex items-center gap-1.5">
+            <div className="mb-2 flex items-center justify-between gap-3">
+                <span
+                    className="font-mono text-[10px] tracking-[0.18em]"
+                    style={{ color: FANTASY.eyebrow }}
+                >
+                    ROADMAP
+                </span>
+                <Link
+                    to="/roadmap"
+                    className="shrink-0 whitespace-nowrap text-xs hover:underline"
+                    style={{ color: FANTASY.goldLink }}
+                >
+                    Roadmap →
+                </Link>
+            </div>
+
+            {/* track chips: full-width, horizontally scrollable (wheel-enabled) */}
+            <div
+                onWheel={(e) => {
+                    if (e.deltaY !== 0) e.currentTarget.scrollLeft += e.deltaY
+                }}
+                className="mb-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+                <div className="flex w-max items-center gap-1.5">
                     {tracks.data.map((t) => {
                         const on = t.id === trackId
                         return (
@@ -180,51 +191,126 @@ export function ActiveQuestline() {
                                 key={t.id}
                                 type="button"
                                 onClick={() => setSelected(t.id)}
-                                className={
+                                className="inline-flex h-[22px] shrink-0 items-center whitespace-nowrap rounded-full px-[11px] text-[11px] font-medium leading-none transition-colors"
+                                style={
                                     on
-                                        ? 'rounded-full border border-q-accent-bright/40 bg-q-accent/[.16] px-[11px] py-[3px] text-[11px] font-medium text-q-accent-fg'
-                                        : 'rounded-full border border-q-border px-[11px] py-[3px] text-[11px] text-q-muted transition-colors hover:text-q-fg'
+                                        ? {
+                                              color: '#1a1105',
+                                              background:
+                                                  'linear-gradient(150deg,#ffe7a6,#c9922f)',
+                                          }
+                                        : {
+                                              color: FANTASY.goldDim,
+                                              boxShadow:
+                                                  'inset 0 0 0 1px rgba(160,120,50,.3)',
+                                          }
                                 }
                             >
                                 {t.title}
                             </button>
                         )
                     })}
-                    <Link
-                        to="/roadmap"
-                        className="ml-1 whitespace-nowrap text-xs text-q-accent-bright hover:underline"
-                    >
-                        Roadmap →
-                    </Link>
                 </div>
             </div>
 
-            <div className="mb-[22px] text-[17px] font-semibold text-q-fg">
+            <div className="mb-3 font-serif text-[15px] font-semibold text-q-fg">
                 {track?.title}
             </div>
 
-            {/* node map */}
-            <div className="flex items-start px-0.5">
-                {model.nodes.map((n, i) => (
-                    <StageNode key={n.id} node={n} last={i === model.nodes.length - 1} />
-                ))}
-            </div>
+            {/* node map — evenly-spaced stages on one connected conduit */}
+            {(() => {
+                const nodes = model.nodes
+                const xOf = (i: number) => PAD_X + i * SLOT + SLOT / 2
+                const width = PAD_X * 2 + Math.max(nodes.length, 1) * SLOT
+                return (
+                    <TalentSlab className="justify-center overflow-x-auto">
+                        <div
+                            className="relative mx-auto"
+                            style={{ width, height: MAP_H }}
+                        >
+                            <svg
+                                className="pointer-events-none absolute inset-0"
+                                width={width}
+                                height={MAP_H}
+                            >
+                                {nodes.slice(0, -1).map((n, i) => {
+                                    const done = n.status === 'done'
+                                    const color = done ? '#d9a341' : '#3a3a42'
+                                    const glow = done
+                                        ? {
+                                              filter: 'drop-shadow(0 0 3px rgba(224,168,72,.6))',
+                                          }
+                                        : undefined
+                                    // Arrowhead just before the next node, pointing forward.
+                                    const ax = xOf(i + 1) - NODE / 2 - 6
+                                    return (
+                                        <g key={n.id}>
+                                            <line
+                                                x1={xOf(i)}
+                                                y1={CY}
+                                                x2={xOf(i + 1)}
+                                                y2={CY}
+                                                strokeLinecap="round"
+                                                stroke={color}
+                                                strokeWidth={done ? 3 : 2}
+                                                strokeDasharray={done ? undefined : '1 7'}
+                                                style={glow}
+                                            />
+                                            <path
+                                                d={`M ${ax - 5} ${CY - 4} L ${ax} ${CY} L ${ax - 5} ${CY + 4}`}
+                                                fill="none"
+                                                stroke={color}
+                                                strokeWidth={2}
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                style={glow}
+                                            />
+                                        </g>
+                                    )
+                                })}
+                            </svg>
+                            {nodes.map((n, i) => (
+                                <StageNode key={n.id} x={xOf(i)} node={n} />
+                            ))}
+                        </div>
+                    </TalentSlab>
+                )
+            })()}
 
             {/* current objective footer */}
             {model.objective && (
-                <div className="mt-[22px] flex items-center gap-3 rounded-xl border border-q-accent-bright/30 bg-gradient-to-br from-q-accent/[.14] to-q-accent/[.03] px-3.5 py-3">
-                    <div className="flex size-[30px] shrink-0 items-center justify-center rounded-[9px] border border-q-accent-bright bg-q-accent-bright/20 text-[13px]">
+                <div
+                    className="mt-3 flex items-center gap-3 rounded-xl px-3.5 py-3"
+                    style={{
+                        background:
+                            'radial-gradient(130% 130% at 0% 0%, rgba(219,95,16,.14), rgba(20,14,8,.9))',
+                        boxShadow: 'inset 0 0 0 1px rgba(217,120,40,.28)',
+                    }}
+                >
+                    <Medallion metal="ember" pulse size={34}>
                         ▶
-                    </div>
+                    </Medallion>
                     <div className="min-w-0 flex-1">
-                        <div className="font-mono text-[9px] tracking-[0.12em] text-q-dim">
+                        <div
+                            className="font-mono text-[9px] tracking-[0.14em]"
+                            style={{ color: FANTASY.goldDim }}
+                        >
                             CURRENT OBJECTIVE
                         </div>
-                        <div className="mt-0.5 truncate text-[13.5px] font-medium text-q-fg">
+                        <div
+                            className="mt-0.5 truncate font-serif text-[13.5px] font-medium"
+                            style={{ color: FANTASY.goldText }}
+                        >
                             {model.objective.title}
                         </div>
                     </div>
-                    <span className="shrink-0 rounded-lg bg-q-accent/[.16] px-2.5 py-1.5 font-mono text-xs text-q-accent-fg">
+                    <span
+                        className="shrink-0 rounded-lg px-2.5 py-1.5 font-mono text-xs"
+                        style={{
+                            color: '#1a1105',
+                            background: 'linear-gradient(150deg,#ffe7a6,#c9922f)',
+                        }}
+                    >
                         +{model.objective.xp} XP
                     </span>
                 </div>

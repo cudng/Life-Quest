@@ -1,6 +1,10 @@
 import { Card } from '@/components/ui/card'
 import { useSession } from '@/auth/session'
 import { getLevelProgress, type ProgressSnapshot } from '@/engine/progress'
+import { tierForLevel } from '@/engine/titles'
+import { XP_BAR_ANCHOR_ID } from '@/lib/fx'
+import { METAL, FANTASY } from '@/components/ui/talent'
+import { AttributesCard } from '@/components/home/AttributesCard'
 
 /** Fallback name when the profile has none: capitalized guess from the email. */
 function nameFromEmail(email: string | undefined): string {
@@ -12,9 +16,13 @@ function nameFromEmail(email: string | undefined): string {
 
 const num = (n: number) => n.toLocaleString('en-US')
 
-/** Small decorative corner bracket. `pos` picks which corner. */
+/** Recessed obsidian socket, used for the portrait and level plaque interior. */
+const SOCKET =
+    'radial-gradient(circle at 50% 32%, #241a0e, #0c0803)'
+
+/** Decorative gold corner bracket. `pos` picks which corner. */
 function Corner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
-    const base = 'absolute size-[13px] border-q-accent-bright/40'
+    const base = 'pointer-events-none absolute size-[13px] border-[#a9803a]/45'
     const map = {
         tl: 'top-2 left-2 border-l-2 border-t-2 rounded-tl-[5px]',
         tr: 'top-2 right-2 border-r-2 border-t-2 rounded-tr-[5px]',
@@ -24,13 +32,20 @@ function Corner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
     return <span className={`${base} ${map[pos]}`} />
 }
 
-function StatChip({ value, label }: { value: number; label: string }) {
+/** Tiny top-corner stat: value over a mono label. */
+function MiniStat({ value, label }: { value: number; label: string }) {
     return (
-        <div className="min-w-[66px] rounded-[10px] border border-q-border bg-q-overlay px-3 py-2.5 text-center">
-            <div className="text-[18px] font-semibold leading-none text-q-fg">
+        <div className="text-right">
+            <div
+                className="font-mono text-[16px] font-semibold leading-none"
+                style={{ color: FANTASY.goldText }}
+            >
                 {num(value)}
             </div>
-            <div className="mt-1 font-mono text-[8.5px] tracking-[0.06em] text-q-dim">
+            <div
+                className="mt-0.5 font-mono text-[10px] tracking-[0.06em]"
+                style={{ color: FANTASY.goldFaint }}
+            >
                 {label}
             </div>
         </div>
@@ -40,20 +55,30 @@ function StatChip({ value, label }: { value: number; label: string }) {
 export function HudBanner({ snapshot }: { snapshot: ProgressSnapshot }) {
     const session = useSession()
     const lp = getLevelProgress(snapshot)
+    const tier = tierForLevel(lp.level)
     const pct = Math.round(lp.ratio * 100)
+    const nearLevel = lp.ratio >= 0.9
     const toNext = lp.span - lp.intoLevel
     const name = snapshot.displayName ?? nameFromEmail(session?.user.email)
     const milestones = snapshot.completedNodeIds.length
     const badges = snapshot.unlockedAchievementIds.length
 
     return (
-        <Card className="relative flex-row items-center gap-[22px] overflow-hidden rounded-2xl border-0 bg-gradient-to-b from-q-panel-raised to-q-panel-2 px-[22px] !py-[18px] ring-1 ring-q-border">
-            {/* decorative layers */}
+        <Card
+            className="relative flex-col justify-center overflow-hidden rounded-2xl border-0 px-[31px] !py-[26px]"
+            style={{
+                background:
+                    'radial-gradient(130% 120% at 50% 0%, #1b1712 0%, #100c08 62%, #0a0705 100%)',
+                boxShadow:
+                    'inset 0 2px 14px rgba(0,0,0,.7), inset 0 0 0 1px rgba(160,120,50,.16)',
+            }}
+        >
+            {/* decorative layers — an ember glow, not arcade indigo */}
             <div
                 className="pointer-events-none absolute -top-10 right-[120px] size-[220px]"
                 style={{
                     background:
-                        'radial-gradient(circle, rgba(99,102,241,.14), transparent 65%)',
+                        'radial-gradient(circle, rgba(219,120,40,.13), transparent 65%)',
                 }}
             />
             <Corner pos="tl" />
@@ -61,54 +86,157 @@ export function HudBanner({ snapshot }: { snapshot: ProgressSnapshot }) {
             <Corner pos="bl" />
             <Corner pos="br" />
 
-            {/* level medallion */}
-            <div className="relative z-[1] flex h-[66px] w-[60px] shrink-0 flex-col items-center justify-center rounded-[14px] bg-gradient-to-br from-q-accent-deep to-q-accent-bright shadow-[0_6px_22px_rgba(99,102,241,.55)] ring-1 ring-white/20">
-                <span className="font-mono text-[8px] font-semibold tracking-[0.12em] text-white/85">
-                    LEVEL
-                </span>
-                <span className="text-[30px] font-bold leading-none text-white">
-                    {lp.level}
-                </span>
-            </div>
-
-            {/* name + role */}
-            <div className="relative z-[1] min-w-0 flex-1">
-                <div className="truncate text-[19px] font-semibold text-q-fg">
-                    {name}
-                </div>
-                <div className="mt-1 truncate text-[13px] text-q-muted">
-                    {snapshot.role ?? 'Adventurer'}
-                </div>
-            </div>
-
-            {/* hero XP bar */}
-            <div className="relative z-[1] min-w-0 flex-1 px-1.5">
-                <div className="mb-2 flex items-baseline justify-between">
-                    <span className="font-mono text-[9px] tracking-[0.14em] text-q-dim">
-                        EXPERIENCE
-                    </span>
-                    <span className="whitespace-nowrap font-mono text-[11px] text-q-accent-bright">
-                        {num(lp.intoLevel)} / {num(lp.span)} XP ·{' '}
-                        <span className="text-q-dim">{num(toNext)} to next</span>
-                    </span>
-                </div>
-                <div className="relative h-3 overflow-hidden rounded-full border border-white/5 bg-q-track">
+            <div className="relative z-[1] flex min-w-0 flex-col justify-center gap-3">
+                {/* identity row: forged plaque + name | mini stats + portrait */}
+                <div className="flex items-center gap-4">
+                    {/* level plaque — forged gold, pulses when the next level is close */}
                     <div
-                        className="absolute inset-0 rounded-full bg-gradient-to-r from-q-accent-deep to-q-accent-bright shadow-[0_0_16px_rgba(99,102,241,.6)]"
-                        style={{ width: `${pct}%` }}
+                        className="relative flex h-[64px] w-[58px] shrink-0 items-center justify-center rounded-[13px]"
+                        style={{
+                            background: METAL.gold.ring,
+                            boxShadow: [
+                                'inset 0 1.5px 1px rgba(255,244,214,.55)',
+                                'inset 0 -2px 4px rgba(0,0,0,.55)',
+                                nearLevel
+                                    ? '0 0 22px rgba(232,180,80,.85)'
+                                    : METAL.gold.glow,
+                            ].join(', '),
+                            ...(nearLevel
+                                ? { animation: 'dq-pulse 1.6s ease-in-out infinite' }
+                                : {}),
+                        }}
                     >
                         <div
-                            className="absolute left-0 top-0 h-full w-2/5 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                            style={{ animation: 'dq-shimmer 2.6s infinite' }}
+                            className="absolute inset-[3px] flex flex-col items-center justify-center rounded-[10px]"
+                            style={{
+                                background: SOCKET,
+                                boxShadow: 'inset 0 2px 6px rgba(0,0,0,.85)',
+                            }}
+                        >
+                            <span
+                                className="font-mono text-[9px] font-semibold tracking-[0.12em]"
+                                style={{ color: FANTASY.goldDim }}
+                            >
+                                LEVEL
+                            </span>
+                            <span
+                                className="text-[28px] font-bold leading-none"
+                                style={{
+                                    color: FANTASY.goldText,
+                                    textShadow: '0 1px 2px rgba(0,0,0,.75)',
+                                }}
+                            >
+                                {lp.level}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* name / role / tier title */}
+                    <div className="min-w-0 flex-1">
+                        <div
+                            className="truncate font-serif text-[21px] font-semibold leading-tight"
+                            style={{
+                                color: FANTASY.goldText,
+                                textShadow: '0 1px 2px rgba(0,0,0,.6)',
+                            }}
+                        >
+                            {name}
+                        </div>
+                        <div
+                            className="truncate text-[15.5px]"
+                            style={{ color: FANTASY.goldDim }}
+                        >
+                            {snapshot.role ?? 'Adventurer'}
+                        </div>
+                        <span
+                            className="mt-1 inline-block rounded-full px-2 py-0.5 font-mono text-[9.5px] leading-none tracking-[0.08em]"
+                            style={{
+                                color: FANTASY.emberText,
+                                background: 'rgba(217,96,16,.12)',
+                                boxShadow: 'inset 0 0 0 1px rgba(217,120,40,.3)',
+                            }}
+                        >
+                            {tier.title.toUpperCase()}
+                        </span>
+                    </div>
+
+                    {/* top-right mini info: milestones, badges, portrait */}
+                    <div className="flex shrink-0 items-center gap-4 self-start">
+                        <MiniStat value={milestones} label="MILESTONES" />
+                        <MiniStat value={badges} label="BADGES" />
+                        <div
+                            className="flex size-[42px] items-center justify-center rounded-[10px] text-[22px] leading-none"
+                            style={{
+                                background: SOCKET,
+                                boxShadow:
+                                    'inset 0 2px 6px rgba(0,0,0,.85), inset 0 0 0 1px rgba(160,120,50,.3)',
+                            }}
+                            title={tier.title}
+                        >
+                            {tier.portrait}
+                        </div>
+                    </div>
+                </div>
+
+                {/* hero XP bar */}
+                <div>
+                    <div className="mb-1.5 flex items-baseline justify-between">
+                        <span
+                            className="font-mono text-[8px] tracking-[0.14em]"
+                            style={{ color: FANTASY.eyebrow }}
+                        >
+                            EXPERIENCE
+                        </span>
+                        <span
+                            className="whitespace-nowrap font-mono text-[10px]"
+                            style={{ color: FANTASY.emberText }}
+                        >
+                            {num(lp.intoLevel)} / {num(lp.span)} XP ·{' '}
+                            <span style={{ color: FANTASY.goldFaint }}>
+                                {num(toNext)} to next
+                            </span>
+                        </span>
+                    </div>
+                    <div
+                        id={XP_BAR_ANCHOR_ID}
+                        className="relative h-2 overflow-hidden rounded-full"
+                        style={{
+                            background: 'linear-gradient(#0a0704,#141009)',
+                            boxShadow:
+                                'inset 0 1px 2px rgba(0,0,0,.9), inset 0 0 0 1px rgba(160,120,50,.14)',
+                        }}
+                    >
+                        <div
+                            className="absolute inset-y-0 left-0 overflow-hidden rounded-full"
+                            style={{
+                                width: `${pct}%`,
+                                background:
+                                    'linear-gradient(90deg,#db5f10,#f8b45a,#ffe0a0)',
+                                boxShadow: nearLevel
+                                    ? '0 0 26px rgba(232,180,80,.95)'
+                                    : '0 0 16px rgba(220,96,16,.6)',
+                            }}
+                        >
+                            <div
+                                className="absolute left-0 top-0 h-full w-2/5 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                                style={{
+                                    animation: `dq-shimmer ${nearLevel ? '1.4s' : '2.6s'} infinite`,
+                                }}
+                            />
+                        </div>
+                        {/* RPG-style notches every 10% */}
+                        <div
+                            className="pointer-events-none absolute inset-0"
+                            style={{
+                                background:
+                                    'repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 2px), rgba(10,7,4,.85) calc(10% - 2px), rgba(10,7,4,.85) 10%)',
+                            }}
                         />
                     </div>
                 </div>
-            </div>
 
-            {/* stat chips */}
-            <div className="relative z-[1] flex shrink-0 gap-2">
-                <StatChip value={milestones} label="MILESTONES" />
-                <StatChip value={badges} label="BADGES" />
+                {/* attributes */}
+                <AttributesCard />
             </div>
         </Card>
     )

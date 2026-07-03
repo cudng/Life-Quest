@@ -1,15 +1,26 @@
+import { useState } from 'react'
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { PencilEdit02Icon } from '@hugeicons/core-free-icons'
 import { useSession } from '@/auth/session'
 import { useIsAdmin } from '@/auth/useIsAdmin'
 import { signOut } from '@/auth/auth'
 import { RewardsLayer } from '@/components/rewards/RewardsLayer'
 import { ModeToggle } from '@/components/mode-toggle'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { SoundToggle } from '@/components/SoundToggle'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { useProgress } from '@/data/useProgress'
-import { getLevelProgress } from '@/engine/progress'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { CharacterAdminDialog } from '@/components/home/CharacterAdminDialog'
+import { METAL, FANTASY } from '@/components/ui/talent'
 
 const NAV_LINKS = [
     { to: '/', label: 'Home', exact: true },
@@ -19,9 +30,13 @@ const NAV_LINKS = [
     { to: '/achievements', label: 'Achievements' },
 ] as const
 
+// Gold-on-obsidian nav links; active reads as an allocated (ember-tinted) node.
 const NAV_LINK_CLASS =
-    'dq-nav-link rounded-lg px-3 py-1.5 text-[13.5px] font-medium text-q-muted transition-colors ' +
-    '[&.active]:bg-q-accent/14 [&.active]:text-q-fg [&.active]:ring-1 [&.active]:ring-inset [&.active]:ring-q-accent/30'
+    'dq-nav-link rounded-md px-3 py-1.5 font-serif text-[13.5px] tracking-wide text-[#9a7c48] transition-colors ' +
+    '[&.active]:text-[#e8d4a8] [&.active]:bg-[rgba(217,96,16,.10)] [&.active]:ring-1 [&.active]:ring-inset [&.active]:ring-[rgba(217,120,40,.35)]'
+
+/** Recessed obsidian socket shared by the logo rune and avatar. */
+const SOCKET = 'radial-gradient(circle at 50% 32%, #241a0e, #0c0803)'
 
 /** Two-letter avatar initials from an email local-part, fallback LQ. */
 function initialsFromEmail(email: string | undefined): string {
@@ -32,45 +47,120 @@ function initialsFromEmail(email: string | undefined): string {
 
 const Logo = () => (
     <Link to="/" className="flex items-center gap-2.5">
-        <span className="grid size-[26px] place-items-center rounded-[7px] bg-gradient-to-br from-q-accent to-q-accent-bright shadow-[var(--q-glow-md)]">
-            <span className="size-[9px] rotate-45 rounded-[1px] bg-white" />
+        <span
+            className="grid size-[30px] place-items-center rounded-full p-[2px]"
+            style={{
+                background: METAL.gold.ring,
+                boxShadow: [
+                    'inset 0 1.5px 1px rgba(255,244,214,.55)',
+                    'inset 0 -2px 4px rgba(0,0,0,.55)',
+                    METAL.gold.glow,
+                ].join(', '),
+            }}
+        >
+            <span
+                className="grid size-full place-items-center rounded-full text-[13px] leading-none"
+                style={{
+                    background: SOCKET,
+                    boxShadow: 'inset 0 2px 6px rgba(0,0,0,.85)',
+                }}
+            >
+                ⚔️
+            </span>
         </span>
-        <span className="text-[15px] font-semibold tracking-tight text-q-fg">
+        <span
+            className="font-serif text-[16px] font-semibold tracking-tight"
+            style={{
+                color: FANTASY.goldText,
+                textShadow: '0 1px 2px rgba(0,0,0,.6)',
+            }}
+        >
             Life Quest
         </span>
     </Link>
 )
 
-const AuthStatus = () => {
+/** Avatar dropdown: email, admin tools and sign in/out in one place. */
+const UserMenu = () => {
     const session = useSession()
     const isAdmin = useIsAdmin()
-
-    if (isAdmin) {
-        return (
-            <div className="flex items-center gap-2">
-                <span className="hidden text-xs text-q-muted sm:inline">
-                    {session?.user.email}
-                </span>
-                <Button variant="outline" size="sm" onClick={() => void signOut()}>
-                    Sign out
-                </Button>
-            </div>
-        )
-    }
+    const [editOpen, setEditOpen] = useState(false)
 
     return (
-        <Button variant="ghost" size="sm" render={<Link to="/login">Sign in</Link>} />
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger
+                    render={
+                        <button
+                            type="button"
+                            aria-label="Account menu"
+                            className="cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                        >
+                            <Avatar>
+                                <AvatarFallback
+                                    className="font-mono text-xs font-semibold"
+                                    style={{
+                                        background: SOCKET,
+                                        color: FANTASY.goldText,
+                                        boxShadow:
+                                            'inset 0 2px 6px rgba(0,0,0,.85), inset 0 0 0 1px rgba(160,120,50,.4)',
+                                    }}
+                                >
+                                    {initialsFromEmail(session?.user.email)}
+                                </AvatarFallback>
+                            </Avatar>
+                        </button>
+                    }
+                />
+                <DropdownMenuContent align="end" className="w-56">
+                    {session && (
+                        <>
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel className="truncate">
+                                    {session.user.email}
+                                </DropdownMenuLabel>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                        </>
+                    )}
+                    {isAdmin && (
+                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                            <HugeiconsIcon icon={PencilEdit02Icon} />
+                            Edit character
+                        </DropdownMenuItem>
+                    )}
+                    {session ? (
+                        <DropdownMenuItem onClick={() => void signOut()}>
+                            Sign out
+                        </DropdownMenuItem>
+                    ) : (
+                        <DropdownMenuItem render={<Link to="/login" />}>
+                            Sign in
+                        </DropdownMenuItem>
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
+            {isAdmin && (
+                <CharacterAdminDialog
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                />
+            )}
+        </>
     )
 }
 
 const HudBar = () => {
-    const session = useSession()
-    const { snapshot } = useProgress()
-    const level = snapshot ? getLevelProgress(snapshot).level : null
-    const streak = snapshot?.streak.count ?? null
-
     return (
-        <nav className="sticky top-0 z-20 flex h-[58px] items-center justify-between gap-6 border-b border-q-border bg-q-bg/70 px-6 backdrop-blur-md">
+        <nav
+            className="sticky top-0 z-20 flex h-[58px] items-center justify-between gap-6 px-6 backdrop-blur-md"
+            style={{
+                background:
+                    'linear-gradient(180deg, rgba(20,16,11,.92), rgba(12,9,6,.92))',
+                boxShadow:
+                    'inset 0 -1px 0 rgba(160,120,50,.22), 0 2px 10px rgba(0,0,0,.5)',
+            }}
+        >
             <div className="flex min-w-[180px] items-center">
                 <Logo />
             </div>
@@ -89,24 +179,9 @@ const HudBar = () => {
             </div>
 
             <div className="flex min-w-[180px] items-center justify-end gap-3">
-                {streak !== null && (
-                    <Badge className="h-7 gap-1.5 rounded-lg border-q-flame/25 bg-q-flame/10 px-2.5 text-[13px] text-q-flame-bright">
-                        <span>🔥</span>
-                        <span className="font-semibold">{streak}</span>
-                    </Badge>
-                )}
-                {level !== null && (
-                    <Badge className="h-7 rounded-md border-q-accent-bright/40 bg-gradient-to-br from-q-accent/25 to-q-accent-bright/15 px-2.5 font-mono text-xs font-semibold text-q-accent-fg">
-                        Lv {level}
-                    </Badge>
-                )}
+                <SoundToggle />
                 <ModeToggle />
-                <Avatar>
-                    <AvatarFallback className="bg-gradient-to-br from-q-line to-q-track text-xs font-semibold text-q-fg-2">
-                        {initialsFromEmail(session?.user.email)}
-                    </AvatarFallback>
-                </Avatar>
-                <AuthStatus />
+                <UserMenu />
             </div>
         </nav>
     )

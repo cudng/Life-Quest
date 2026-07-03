@@ -13,6 +13,7 @@ import {
   useDailyCompletions,
   useJobApplications,
   useAchievementsUnlocked,
+  useLoginRewards,
   useProfile,
 } from "@/data/queries";
 
@@ -32,6 +33,7 @@ export function useProgress(): UseProgressResult {
   const dailyCompletions = useDailyCompletions();
   const jobApplications = useJobApplications();
   const achievements = useAchievementsUnlocked();
+  const loginRewards = useLoginRewards();
   const profile = useProfile();
 
   const queries = [
@@ -42,6 +44,7 @@ export function useProgress(): UseProgressResult {
     dailyCompletions,
     jobApplications,
     achievements,
+    loginRewards,
     profile,
   ];
 
@@ -64,6 +67,7 @@ export function useProgress(): UseProgressResult {
       !dailyCompletions.data ||
       !jobApplications.data ||
       !achievements.data ||
+      !loginRewards.data ||
       !profile.data
     ) {
       return undefined;
@@ -76,6 +80,7 @@ export function useProgress(): UseProgressResult {
       dailyCompletions: dailyCompletions.data,
       jobApplications: jobApplications.data,
       unlockedAchievements: achievements.data,
+      loginRewards: loginRewards.data,
       profile: profile.data,
       today: localToday(),
     });
@@ -87,6 +92,7 @@ export function useProgress(): UseProgressResult {
     dailyCompletions.data,
     jobApplications.data,
     achievements.data,
+    loginRewards.data,
     profile.data,
   ]);
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { PencilEdit02Icon, Delete02Icon } from '@hugeicons/core-free-icons'
+import { Delete02Icon } from '@hugeicons/core-free-icons'
 import {
     Dialog,
     DialogClose,
@@ -8,7 +8,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -128,8 +127,16 @@ function AddAttributeRow({ existingIds }: { existingIds: Set<string>; }) {
     )
 }
 
-export function CharacterAdminDialog() {
-    const [open, setOpen] = useState(false)
+interface CharacterAdminDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+}
+
+/** Controlled dialog — the trigger lives in the account menu (see __root). */
+export function CharacterAdminDialog({
+    open,
+    onOpenChange,
+}: CharacterAdminDialogProps) {
     const profile = useProfile()
     const attributes = useAttributes()
     const updateProfile = useUpdateProfile()
@@ -150,15 +157,7 @@ export function CharacterAdminDialog() {
     const existingIds = new Set((attributes.data ?? []).map((a) => a.id))
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger
-                render={
-                    <Button variant="outline" size="sm">
-                        <HugeiconsIcon icon={PencilEdit02Icon} />
-                        Edit character
-                    </Button>
-                }
-            />
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Edit character</DialogTitle>
