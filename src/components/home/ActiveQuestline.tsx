@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { FANTASY, Medallion, TalentSlab, type Metal } from '@/components/ui/talent'
-import { useTracks, useStages, useMilestones } from '@/data/queries'
+import { useTracks, usePaths, useStages, useMilestones } from '@/data/queries'
 import type { Milestone, Stage } from '@/data/types'
 
 type StageStatus = 'done' | 'active' | 'locked'
@@ -110,6 +110,7 @@ function StageNode({ x, node }: { x: number; node: QuestNode }) {
 
 export function ActiveQuestline() {
     const tracks = useTracks()
+    const paths = usePaths()
     const stages = useStages()
     const milestones = useMilestones()
     const [selected, setSelected] = useState<string | null>(null)
@@ -119,26 +120,40 @@ export function ActiveQuestline() {
         [milestones.data],
     )
 
+    // A track's stages flattened into one questline: its paths in position
+    // order, then each path's stages in position order.
+    const stagesForTrack = useMemo(() => {
+        const pathList = (paths.data ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+        const stageList = stages.data ?? []
+        return (trackId: string): Stage[] =>
+            pathList
+                .filter((p) => p.track_id === trackId)
+                .flatMap((p) =>
+                    stageList
+                        .filter((s) => s.path_id === p.id)
+                        .sort((a, b) => a.position - b.position),
+                )
+    }, [paths.data, stages.data])
+
     // Default to the first track that still has an unfinished milestone.
     const defaultTrackId = useMemo(() => {
         const list = tracks.data ?? []
         for (const t of list) {
-            const trackStages = (stages.data ?? []).filter((s) => s.track_id === t.id)
-            const hasOpen = trackStages.some((s) =>
+            const hasOpen = stagesForTrack(t.id).some((s) =>
                 (byStage.get(s.id) ?? []).some((m) => !m.completed),
             )
             if (hasOpen) return t.id
         }
         return list[0]?.id ?? null
-    }, [tracks.data, stages.data, byStage])
+    }, [tracks.data, stagesForTrack, byStage])
 
     const trackId = selected ?? defaultTrackId
 
     const model = useMemo(() => {
         if (!trackId) return null
-        const trackStages = (stages.data ?? [])
-            .filter((s) => s.track_id === trackId)
-            .sort((a, b) => a.position - b.position)
+        const trackStages = stagesForTrack(trackId)
         const { nodes, activeIndex } = buildNodes(trackStages, byStage)
 
         // Current objective: first incomplete milestone at/after the active stage.
@@ -149,9 +164,16 @@ export function ActiveQuestline() {
                 (byStage.get(trackStages[i].id) ?? []).find((m) => !m.completed) ?? null
         }
         return { nodes, objective }
-    }, [trackId, stages.data, byStage])
+    }, [trackId, stagesForTrack, byStage])
 
-    if (!tracks.data || !stages.data || !milestones.data || !trackId || !model) {
+    if (
+        !tracks.data ||
+        !paths.data ||
+        !stages.data ||
+        !milestones.data ||
+        !trackId ||
+        !model
+    ) {
         return null
     }
 

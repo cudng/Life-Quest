@@ -73,10 +73,11 @@ function SkillTree() {
                         Progression
                     </p>
                     <h1
-                        className="font-serif text-base font-semibold leading-tight"
+                        className="font-serif font-semibold leading-tight"
                         style={{
                             color: FANTASY.goldText,
                             textShadow: '0 1px 2px rgba(0,0,0,.6)',
+                            fontSize: '2rem',
                         }}
                     >
                         Skill Tree

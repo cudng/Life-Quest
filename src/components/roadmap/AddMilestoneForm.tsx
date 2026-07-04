@@ -55,13 +55,18 @@ export function AddMilestoneForm({
   };
 
   return (
-    <aside className="flex h-full flex-col overflow-y-auto border-l bg-card p-6 text-left text-card-foreground">
+    <aside className="flex h-full flex-col overflow-y-auto border-l border-[#a07832]/25 bg-[#0d0a07] p-6 text-left text-[#e8d4a8]">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">Add milestone</h2>
+        <h2
+          className="font-serif text-lg font-semibold text-[#e8d4a8]"
+          style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
+        >
+          Add milestone
+        </h2>
         <button
           type="button"
           onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-[#9a7c48] transition-colors hover:text-[#e8d4a8]"
           aria-label="Close"
         >
           ✕
@@ -69,27 +74,31 @@ export function AddMilestoneForm({
       </div>
 
       {stages.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-4 text-sm text-[#9a7c48]">
           This track has no stages yet. Add a stage first.
         </p>
       ) : (
-        <div className="mt-4 space-y-4">
+        <div className="mt-5 space-y-4">
           <label className="block">
-            <span className="text-sm font-medium text-foreground">Title</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+              Title
+            </span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+              className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-foreground">Stage</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+              Stage
+            </span>
             <select
               value={stageId}
               onChange={(e) => setStageId(e.target.value)}
-              className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+              className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
             >
               {stages.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -100,31 +109,33 @@ export function AddMilestoneForm({
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-foreground">XP</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+              XP
+            </span>
             <input
               type="number"
               min={0}
               value={xp}
               onChange={(e) => setXp(Number(e.target.value) || 0)}
-              className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+              className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-foreground">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
               Description
             </span>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+              className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
             />
           </label>
 
           {trackMilestones.length > 0 && (
             <div>
-              <span className="text-sm font-medium text-foreground">
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
                 Prerequisites
               </span>
               <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto">
@@ -135,9 +146,9 @@ export function AddMilestoneForm({
                         type="checkbox"
                         checked={prerequisites.includes(m.id)}
                         onChange={() => togglePrereq(m.id)}
-                        className="size-4 accent-primary"
+                        className="size-4 accent-[#db5f10]"
                       />
-                      <span className="text-sm text-foreground">{m.title}</span>
+                      <span className="text-sm text-[#e8d4a8]">{m.title}</span>
                     </label>
                   </li>
                 ))}
@@ -155,7 +166,7 @@ export function AddMilestoneForm({
             type="button"
             disabled={!canSubmit}
             onClick={submit}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            className="rounded-md border border-[#db5f10]/50 bg-gradient-to-b from-[#241a0e] to-[#140d06] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-[#f0b85e] transition-colors hover:border-[#db5f10]/80 disabled:opacity-50"
           >
             Add milestone
           </button>

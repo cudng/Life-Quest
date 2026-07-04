@@ -461,6 +461,17 @@ code {
   background: transparent;
 }
 
+/* Fully hide scrollbars everywhere. Scrolling still works via wheel/trackpad/
+   keyboard; only the visible bar is removed. Firefox: scrollbar-width; old
+   Edge/IE: -ms-overflow-style; Chrome/Safari: -webkit-scrollbar. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 /* Respect the OS "reduce motion" setting: freeze decorative animations
    (shimmer, pulse, marquee, skeleton) and make transitions instant. */
 @media (prefers-reduced-motion: reduce) {

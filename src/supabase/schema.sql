@@ -5,9 +5,17 @@ CREATE TABLE tracks (
     position INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE stages (
+CREATE TABLE paths (
     id TEXT PRIMARY KEY,
     track_id TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    icon TEXT,
+    position INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE stages (
+    id TEXT PRIMARY KEY,
+    path_id TEXT NOT NULL REFERENCES paths(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     position INT NOT NULL DEFAULT 0
 );

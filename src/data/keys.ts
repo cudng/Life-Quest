@@ -3,6 +3,7 @@
 
 export const queryKeys = {
   tracks: ["tracks"] as const,
+  paths: ["paths"] as const,
   stages: ["stages"] as const,
   milestones: ["milestones"] as const,
   subTasks: ["sub_tasks"] as const,

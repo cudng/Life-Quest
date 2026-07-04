@@ -32,7 +32,9 @@ export function ResourcesEditor({ value, onChange }: ResourcesEditorProps) {
 
   return (
     <div>
-      <span className="text-sm font-medium text-foreground">Resources</span>
+      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+        Resources
+      </span>
       <ul className="mt-2 space-y-2">
         {value.map((r, i) => (
           <li key={i} className="flex items-center gap-2">
@@ -41,19 +43,19 @@ export function ResourcesEditor({ value, onChange }: ResourcesEditorProps) {
               value={r.label}
               placeholder="Label"
               onChange={(e) => update(i, { label: e.target.value })}
-              className="w-1/3 rounded-md border bg-background px-2 py-1 text-sm"
+              className="w-1/3 rounded-md border border-[#a07832]/35 bg-[#100c08] px-2 py-1 text-sm text-[#e8d4a8] outline-none transition-colors placeholder:text-[#7a6440] focus:border-[#db5f10]/60"
             />
             <input
               type="url"
               value={r.url ?? ""}
               placeholder="https://… (optional)"
               onChange={(e) => update(i, { url: e.target.value })}
-              className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 text-sm"
+              className="min-w-0 flex-1 rounded-md border border-[#a07832]/35 bg-[#100c08] px-2 py-1 text-sm text-[#e8d4a8] outline-none transition-colors placeholder:text-[#7a6440] focus:border-[#db5f10]/60"
             />
             <button
               type="button"
               onClick={() => remove(i)}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-[#9a7c48] transition-colors hover:text-destructive"
               aria-label="Remove resource"
             >
               ✕
@@ -64,7 +66,7 @@ export function ResourcesEditor({ value, onChange }: ResourcesEditorProps) {
       <button
         type="button"
         onClick={add}
-        className="mt-2 rounded-md border px-3 py-1 text-sm text-foreground hover:bg-secondary"
+        className="mt-2 rounded-md border border-[#a07832]/35 bg-gradient-to-b from-[#1b1712] to-[#100c08] px-3 py-1 font-mono text-xs uppercase tracking-wider text-[#9a7c48] transition-colors hover:border-[#db5f10]/60 hover:text-[#e8d4a8]"
       >
         ＋ Resource
       </button>

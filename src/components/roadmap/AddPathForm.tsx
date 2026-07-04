@@ -1,25 +1,27 @@
-// Admin form to add a track (a tab / quest line). Title required, icon (emoji)
+// Admin form to add a path to the active track. Title required, icon (emoji)
 // optional. Id is a unique slug from the title; position goes to the end.
 
 import { useState } from "react";
-import { useAddTrack } from "@/data/mutations";
+import { useAddPath } from "@/data/mutations";
 import { uniqueSlug } from "@/lib/slug";
 
-interface AddTrackFormProps {
+interface AddPathFormProps {
+  trackId: string;
   existingIds: Set<string>;
   nextPosition: number;
-  /** Called with the new track id so the page can switch to it. */
+  /** Called with the new path id so the page can switch to it. */
   onCreated: (id: string) => void;
   onClose: () => void;
 }
 
-export function AddTrackForm({
+export function AddPathForm({
+  trackId,
   existingIds,
   nextPosition,
   onCreated,
   onClose,
-}: AddTrackFormProps) {
-  const add = useAddTrack();
+}: AddPathFormProps) {
+  const add = useAddPath();
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState("");
 
@@ -31,6 +33,7 @@ export function AddTrackForm({
     add.mutate(
       {
         id,
+        track_id: trackId,
         title: title.trim(),
         icon: icon.trim() || null,
         position: nextPosition,
@@ -46,7 +49,7 @@ export function AddTrackForm({
           className="font-serif text-lg font-semibold text-[#e8d4a8]"
           style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
         >
-          Add track
+          Add path
         </h2>
         <button
           type="button"
@@ -85,7 +88,7 @@ export function AddTrackForm({
 
         {add.isError && (
           <p className="text-sm text-destructive">
-            {add.error?.message ?? "Failed to add track"}
+            {add.error?.message ?? "Failed to add path"}
           </p>
         )}
 
@@ -95,7 +98,7 @@ export function AddTrackForm({
           onClick={submit}
           className="rounded-md border border-[#db5f10]/50 bg-gradient-to-b from-[#241a0e] to-[#140d06] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-[#f0b85e] transition-colors hover:border-[#db5f10]/80 disabled:opacity-50"
         >
-          Add track
+          Add path
         </button>
       </div>
     </aside>

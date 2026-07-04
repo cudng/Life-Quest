@@ -29,9 +29,17 @@ export interface Track {
   position: number;
 }
 
-export interface Stage {
+export interface Path {
   id: string;
   track_id: string;
+  title: string;
+  icon: string | null;
+  position: number;
+}
+
+export interface Stage {
+  id: string;
+  path_id: string;
   title: string;
   position: number;
 }

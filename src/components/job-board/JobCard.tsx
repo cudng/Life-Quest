@@ -1,35 +1,13 @@
 // One job application card inside a kanban column. Read view shows company,
-// role, applied date, an optional link and notes. For admins it adds a status
-// dropdown (move between columns), Edit (lifts to the parent form via onEdit)
-// and a 2-step Delete — mirroring SkillDetail's admin controls. Moving an
-// application to "interview"/"offer" can unlock achievements (evaluated by the
-// page's useAchievementSync). Visitors see everything read-only.
+// role, applied date, an optional link and notes. For admins it adds a single
+// ✎ edit icon that lifts the application to the parent form (onEdit); status
+// changes and delete live inside that edit panel. The column already conveys
+// the status, so no per-card status control is shown. Visitors see everything
+// read-only.
 
-import { memo, useState } from "react";
-import type { JobApplication, JobStatus } from "@/data/types";
-import {
-  useUpdateJobApplication,
-  useDeleteJobApplication,
-} from "@/data/mutations";
+import { memo } from "react";
+import type { JobApplication } from "@/data/types";
 import { useIsAdmin } from "@/auth/useIsAdmin";
-
-const STATUS_OPTIONS: JobStatus[] = [
-  "applied",
-  "screening",
-  "interview",
-  "offer",
-  "rejected",
-  "ghosted",
-];
-
-const STATUS_LABEL: Record<JobStatus, string> = {
-  applied: "Applied",
-  screening: "Screening",
-  interview: "Interview",
-  offer: "Offer",
-  rejected: "Rejected",
-  ghosted: "Ghosted",
-};
 
 interface JobCardProps {
   app: JobApplication;
@@ -37,23 +15,30 @@ interface JobCardProps {
 }
 
 function JobCardBase({ app, onEdit }: JobCardProps) {
-  const updateApp = useUpdateJobApplication();
-  const deleteApp = useDeleteJobApplication();
   const isAdmin = useIsAdmin();
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
-
-  const move = (status: JobStatus) =>
-    updateApp.mutate({ id: app.id, patch: { status } });
-
-  const remove = () => deleteApp.mutate(app.id);
-
   return (
-    <div className="rounded-lg border bg-card p-3 text-left text-card-foreground">
-      <div className="font-medium text-foreground">{app.company}</div>
-      <div className="text-sm text-muted-foreground">{app.role}</div>
+    <div className="rounded-lg border border-[#a07832]/25 bg-gradient-to-b from-[#161009] to-[#0d0a07] p-3 text-left">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate font-serif font-medium text-[#e8d4a8]">
+            {app.company}
+          </div>
+          <div className="text-sm text-[#9a7c48]">{app.role}</div>
+        </div>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => onEdit(app)}
+            aria-label="Edit application"
+            className="shrink-0 text-sm text-[#9a7c48] transition-colors hover:text-[#f0b85e]"
+          >
+            ✎
+          </button>
+        )}
+      </div>
 
-      <div className="mt-2 text-xs text-muted-foreground">
+      <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-[#9a7c48]">
         Applied {app.applied_at}
       </div>
 
@@ -62,69 +47,13 @@ function JobCardBase({ app, onEdit }: JobCardProps) {
           href={app.url}
           target="_blank"
           rel="noreferrer"
-          className="mt-1 block text-xs text-[var(--accent)] hover:underline"
+          className="mt-1 block text-xs text-[#d9a341] hover:underline"
         >
           Posting ↗
         </a>
       )}
 
-      {app.notes && (
-        <p className="mt-2 text-xs text-muted-foreground">{app.notes}</p>
-      )}
-
-      {isAdmin && (
-        <div className="mt-3 space-y-2">
-          <select
-            value={app.status}
-            disabled={updateApp.isPending}
-            onChange={(e) => move(e.target.value as JobStatus)}
-            className="w-full rounded-md border bg-background px-2 py-1 text-xs disabled:opacity-50"
-            aria-label="Status"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onEdit(app)}
-              className="flex-1 rounded-md border px-2 py-1 text-xs text-foreground hover:bg-secondary"
-            >
-              Edit
-            </button>
-            {confirmDelete ? (
-              <button
-                type="button"
-                disabled={deleteApp.isPending}
-                onClick={remove}
-                className="flex-1 rounded-md bg-destructive px-2 py-1 text-xs font-medium text-white disabled:opacity-50"
-              >
-                Confirm delete
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(true)}
-                className="flex-1 rounded-md border border-destructive px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
-              >
-                Delete
-              </button>
-            )}
-          </div>
-
-          {(updateApp.isError || deleteApp.isError) && (
-            <p className="text-xs text-destructive">
-              {updateApp.error?.message ??
-                deleteApp.error?.message ??
-                "Action failed"}
-            </p>
-          )}
-        </div>
-      )}
+      {app.notes && <p className="mt-2 text-xs text-[#9a7c48]">{app.notes}</p>}
     </div>
   );
 }

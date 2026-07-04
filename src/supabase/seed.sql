@@ -13,16 +13,25 @@ INSERT INTO tracks (id, title, icon, position) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
+-- paths (one per track — a track groups several paths; here a default "Main")
+-- ---------------------------------------------------------------------------
+INSERT INTO paths (id, track_id, title, icon, position) VALUES
+  ('education-main',     'education',     'Main', '🎓', 0),
+  ('career-main',        'career',        'Main', '💼', 0),
+  ('side-projects-main', 'side-projects', 'Main', '🚀', 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
 -- stages
 -- ---------------------------------------------------------------------------
-INSERT INTO stages (id, track_id, title, position) VALUES
-  ('cs-fundamentals', 'education', 'CS Fundamentals', 0),
-  ('cs-bachelor',     'education', 'CS Bachelor',     1),
-  ('job-hunt',        'career',    'Job Hunt',        0),
-  ('interview',       'career',    'Interview',       1),
-  ('internship',      'career',    'Internship',      2),
-  ('first-job',       'career',    'First Job',       3),
-  ('portfolio',       'side-projects', 'Portfolio',   0)
+INSERT INTO stages (id, path_id, title, position) VALUES
+  ('cs-fundamentals', 'education-main',     'CS Fundamentals', 0),
+  ('cs-bachelor',     'education-main',     'CS Bachelor',     1),
+  ('job-hunt',        'career-main',        'Job Hunt',        0),
+  ('interview',       'career-main',        'Interview',       1),
+  ('internship',      'career-main',        'Internship',      2),
+  ('first-job',       'career-main',        'First Job',       3),
+  ('portfolio',       'side-projects-main', 'Portfolio',       0)
 ON CONFLICT (id) DO NOTHING;
 
 -- ---------------------------------------------------------------------------

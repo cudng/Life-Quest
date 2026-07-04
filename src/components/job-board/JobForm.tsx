@@ -9,6 +9,7 @@ import type { JobApplication, JobStatus } from "@/data/types";
 import {
   useAddJobApplication,
   useUpdateJobApplication,
+  useDeleteJobApplication,
 } from "@/data/mutations";
 import { localToday } from "@/lib/date";
 
@@ -39,7 +40,9 @@ interface JobFormProps {
 export function JobForm({ app, onClose }: JobFormProps) {
   const add = useAddJobApplication();
   const update = useUpdateJobApplication();
+  const del = useDeleteJobApplication();
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [company, setCompany] = useState(app?.company ?? "");
   const [role, setRole] = useState(app?.role ?? "");
   const [url, setUrl] = useState(app?.url ?? "");
@@ -72,63 +75,77 @@ export function JobForm({ app, onClose }: JobFormProps) {
     }
   };
 
-  const error = app ? update.error : add.error;
+  const remove = () => {
+    if (!app) return;
+    del.mutate(app.id, { onSuccess: onClose });
+  };
+
+  const error = app ? update.error ?? del.error : add.error;
 
   return (
-    <aside className="flex h-full flex-col overflow-y-auto border-l bg-card p-6 text-left text-card-foreground">
+    <aside className="flex h-full flex-col overflow-y-auto border-l border-[#a07832]/25 bg-[#0d0a07] p-6 text-left text-[#e8d4a8]">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2
+          className="font-serif text-lg font-semibold text-[#e8d4a8]"
+          style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
+        >
           {app ? "Edit application" : "Add application"}
         </h2>
         <button
           type="button"
           onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-[#9a7c48] transition-colors hover:text-[#e8d4a8]"
           aria-label="Close"
         >
           ✕
         </button>
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-5 space-y-4">
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Company</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+            Company
+          </span>
           <input
             type="text"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Role</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+            Role
+          </span>
           <input
             type="text"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
             Posting URL (optional)
           </span>
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Status</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+            Status
+          </span>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as JobStatus)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
@@ -139,24 +156,26 @@ export function JobForm({ app, onClose }: JobFormProps) {
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
             Applied date
           </span>
           <input
             type="date"
             value={appliedAt}
             onChange={(e) => setAppliedAt(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Notes</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+            Notes
+          </span>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
@@ -166,14 +185,36 @@ export function JobForm({ app, onClose }: JobFormProps) {
           </p>
         )}
 
-        <button
-          type="button"
-          disabled={!canSubmit}
-          onClick={submit}
-          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
-        >
-          {app ? "Save" : "Add application"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={submit}
+            className="flex-1 rounded-md border border-[#db5f10]/50 bg-gradient-to-b from-[#241a0e] to-[#140d06] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-[#f0b85e] transition-colors hover:border-[#db5f10]/80 disabled:opacity-50"
+          >
+            {app ? "Save" : "Add application"}
+          </button>
+
+          {app &&
+            (confirmDelete ? (
+              <button
+                type="button"
+                disabled={del.isPending}
+                onClick={remove}
+                className="flex-1 rounded-md border border-destructive/60 bg-gradient-to-b from-[#2a1010] to-[#160808] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-destructive transition-colors hover:border-destructive disabled:opacity-50"
+              >
+                {del.isPending ? "Deleting…" : "Confirm"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="flex-1 rounded-md border border-destructive/40 bg-gradient-to-b from-[#1b1712] to-[#100c08] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-destructive transition-colors hover:border-destructive/70"
+              >
+                Delete
+              </button>
+            ))}
+        </div>
       </div>
     </aside>
   );

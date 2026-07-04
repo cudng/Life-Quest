@@ -40,7 +40,7 @@ function MilestoneNodeImpl({ data, selected }: NodeProps<MilestoneFlowNode>) {
 
   return (
     <TalentSlab
-      className={`w-[230px] items-center gap-3 py-3 ${
+      className={`w-[220px] items-center gap-2.5 py-1.5 ${
         selected ? "ring-2 ring-[#d99f36]" : ""
       }`}
     >
@@ -48,7 +48,7 @@ function MilestoneNodeImpl({ data, selected }: NodeProps<MilestoneFlowNode>) {
 
       <Medallion
         metal={metal}
-        size={46}
+        size={32}
         badge={badge}
         dim={locked}
         pulse={status === "available"}
@@ -58,7 +58,7 @@ function MilestoneNodeImpl({ data, selected }: NodeProps<MilestoneFlowNode>) {
 
       <div className="min-w-0 flex-1">
         <h3
-          className="line-clamp-2 font-serif text-sm font-semibold"
+          className="line-clamp-1 font-serif text-[13px] font-semibold leading-tight"
           style={{
             color: locked ? FANTASY.goldFaint : FANTASY.goldText,
             textShadow: "0 1px 2px rgba(0,0,0,.6)",

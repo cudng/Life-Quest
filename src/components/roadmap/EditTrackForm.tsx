@@ -1,41 +1,27 @@
-// Admin form to add a track (a tab / quest line). Title required, icon (emoji)
-// optional. Id is a unique slug from the title; position goes to the end.
+// Admin form to edit a track's name and icon. Id and position are immutable
+// here; only title (required) and icon (emoji, optional) change.
 
 import { useState } from "react";
-import { useAddTrack } from "@/data/mutations";
-import { uniqueSlug } from "@/lib/slug";
+import { useUpdateTrack } from "@/data/mutations";
+import type { Track } from "@/data/types";
 
-interface AddTrackFormProps {
-  existingIds: Set<string>;
-  nextPosition: number;
-  /** Called with the new track id so the page can switch to it. */
-  onCreated: (id: string) => void;
+interface EditTrackFormProps {
+  track: Track;
   onClose: () => void;
 }
 
-export function AddTrackForm({
-  existingIds,
-  nextPosition,
-  onCreated,
-  onClose,
-}: AddTrackFormProps) {
-  const add = useAddTrack();
-  const [title, setTitle] = useState("");
-  const [icon, setIcon] = useState("");
+export function EditTrackForm({ track, onClose }: EditTrackFormProps) {
+  const update = useUpdateTrack();
+  const [title, setTitle] = useState(track.title);
+  const [icon, setIcon] = useState(track.icon ?? "");
 
-  const canSubmit = title.trim().length > 0 && !add.isPending;
+  const canSubmit = title.trim().length > 0 && !update.isPending;
 
   const submit = () => {
     if (!canSubmit) return;
-    const id = uniqueSlug(title, existingIds);
-    add.mutate(
-      {
-        id,
-        title: title.trim(),
-        icon: icon.trim() || null,
-        position: nextPosition,
-      },
-      { onSuccess: () => onCreated(id) },
+    update.mutate(
+      { id: track.id, title: title.trim(), icon: icon.trim() || null },
+      { onSuccess: onClose },
     );
   };
 
@@ -46,7 +32,7 @@ export function AddTrackForm({
           className="font-serif text-lg font-semibold text-[#e8d4a8]"
           style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
         >
-          Add track
+          Edit track
         </h2>
         <button
           type="button"
@@ -83,9 +69,9 @@ export function AddTrackForm({
           />
         </label>
 
-        {add.isError && (
+        {update.isError && (
           <p className="text-sm text-destructive">
-            {add.error?.message ?? "Failed to add track"}
+            {update.error?.message ?? "Failed to update track"}
           </p>
         )}
 
@@ -95,7 +81,7 @@ export function AddTrackForm({
           onClick={submit}
           className="rounded-md border border-[#db5f10]/50 bg-gradient-to-b from-[#241a0e] to-[#140d06] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-[#f0b85e] transition-colors hover:border-[#db5f10]/80 disabled:opacity-50"
         >
-          Add track
+          Save changes
         </button>
       </div>
     </aside>

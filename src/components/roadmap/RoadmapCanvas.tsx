@@ -20,11 +20,15 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { MilestoneNode } from "@/components/roadmap/MilestoneNode";
-import type { MilestoneFlowNode } from "@/engine/roadmapLayout";
+import { StageNode } from "@/components/roadmap/StageNode";
+import type {
+  MilestoneFlowNode,
+  StageFlowNode,
+} from "@/engine/roadmapLayout";
 import type { NodeStatus } from "@/engine/graph";
 
 // Stable reference — React Flow warns if this is recreated each render.
-const nodeTypes: NodeTypes = { milestone: MilestoneNode };
+const nodeTypes: NodeTypes = { milestone: MilestoneNode, stage: StageNode };
 
 // Conduit colours (PROJECT.md): allocated = gold glow, unallocated = iron dash.
 const GOLD = "#d99f36";
@@ -60,23 +64,49 @@ function styleEdges(nodes: MilestoneFlowNode[], edges: Edge[]): Edge[] {
   });
 }
 
+type RoadmapNode = StageFlowNode | MilestoneFlowNode;
+
 interface RoadmapCanvasProps {
   nodes: MilestoneFlowNode[];
+  stageNodes: StageFlowNode[];
   edges: Edge[];
   onSelect: (id: string | null) => void;
+  isAdmin?: boolean;
+  onEditStage?: (stageId: string) => void;
 }
 
-export function RoadmapCanvas({ nodes, edges, onSelect }: RoadmapCanvasProps) {
+export function RoadmapCanvas({
+  nodes,
+  stageNodes,
+  edges,
+  onSelect,
+  isAdmin = false,
+  onEditStage,
+}: RoadmapCanvasProps) {
   const styledEdges = useMemo(() => styleEdges(nodes, edges), [nodes, edges]);
-  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState(nodes);
+  // Stage bands first so they render behind the milestone nodes; inject the
+  // admin edit affordance into each band's data.
+  const allNodes = useMemo<RoadmapNode[]>(
+    () => [
+      ...stageNodes.map((n) => ({
+        ...n,
+        data: { ...n.data, isAdmin, onEditStage },
+      })),
+      ...nodes,
+    ],
+    [stageNodes, nodes, isAdmin, onEditStage],
+  );
+  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState(allNodes);
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState(styledEdges);
 
   // Re-sync when the track switches or statuses change.
-  useEffect(() => setFlowNodes(nodes), [nodes, setFlowNodes]);
+  useEffect(() => setFlowNodes(allNodes), [allNodes, setFlowNodes]);
   useEffect(() => setFlowEdges(styledEdges), [styledEdges, setFlowEdges]);
 
-  const handleNodeClick: NodeMouseHandler<MilestoneFlowNode> = (_e, node) =>
+  const handleNodeClick: NodeMouseHandler<RoadmapNode> = (_e, node) => {
+    if (node.type === "stage") return;
     onSelect(node.id);
+  };
 
   return (
     <ReactFlow
@@ -88,6 +118,7 @@ export function RoadmapCanvas({ nodes, edges, onSelect }: RoadmapCanvasProps) {
       onNodeClick={handleNodeClick}
       onPaneClick={() => onSelect(null)}
       fitView
+      fitViewOptions={{ padding: 0.2, maxZoom: 0.85 }}
       minZoom={0.2}
       proOptions={{ hideAttribution: true }}
       style={{
@@ -108,6 +139,7 @@ export function RoadmapCanvas({ nodes, edges, onSelect }: RoadmapCanvasProps) {
         maskColor="rgba(0,0,0,.6)"
         style={{ background: "#0d0a07" }}
         nodeColor={(n) => {
+          if (n.type === "stage") return "#171009";
           const data = n.data as MilestoneFlowNode["data"];
           return MINIMAP_METAL[data.status];
         }}

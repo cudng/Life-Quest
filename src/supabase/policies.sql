@@ -11,6 +11,15 @@ CREATE POLICY "admin write tracks" ON tracks
     USING (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a')
     WITH CHECK (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a');
 
+-- paths
+ALTER TABLE paths ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public read paths" ON paths
+    FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "admin write paths" ON paths
+    FOR ALL TO authenticated
+    USING (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a')
+    WITH CHECK (auth.uid() = 'ce4086d6-30ad-487b-b1f3-50c151a00d6a');
+
 -- stages
 ALTER TABLE stages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public read stages" ON stages

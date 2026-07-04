@@ -60,48 +60,57 @@ export function AddSkillForm({ allSkills, onClose }: AddSkillFormProps) {
   };
 
   return (
-    <aside className="flex h-full flex-col overflow-y-auto border-l bg-card p-6 text-left text-card-foreground">
+    <aside className="flex h-full flex-col overflow-y-auto border-l border-[#a07832]/25 bg-[#0d0a07] p-6 text-left text-[#e8d4a8]">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">Add skill</h2>
+        <h2
+          className="font-serif text-lg font-semibold text-[#e8d4a8]"
+          style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
+        >
+          Add skill
+        </h2>
         <button
           type="button"
           onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-[#9a7c48] transition-colors hover:text-[#e8d4a8]"
           aria-label="Close"
         >
           ✕
         </button>
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-5 space-y-4">
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Name</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+            Name
+          </span>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
             Icon (emoji, optional)
           </span>
           <input
             type="text"
             value={icon}
             onChange={(e) => setIcon(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Parent</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
+            Parent
+          </span>
           <select
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           >
             <option value="">— None (new trunk) —</option>
             {allSkills.map((s) => (
@@ -113,14 +122,14 @@ export function AddSkillForm({ allSkills, onClose }: AddSkillFormProps) {
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9922f]">
             Description
           </span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="mt-1.5 w-full rounded-md border border-[#a07832]/35 bg-[#100c08] px-3 py-1.5 text-sm text-[#e8d4a8] outline-none transition-colors focus:border-[#db5f10]/60"
           />
         </label>
 
@@ -136,7 +145,7 @@ export function AddSkillForm({ allSkills, onClose }: AddSkillFormProps) {
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          className="rounded-md border border-[#db5f10]/50 bg-gradient-to-b from-[#241a0e] to-[#140d06] px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-[#f0b85e] transition-colors hover:border-[#db5f10]/80 disabled:opacity-50"
         >
           Add skill
         </button>

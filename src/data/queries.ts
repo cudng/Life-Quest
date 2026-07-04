@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { queryKeys } from "@/data/keys";
 import type {
   Track,
+  Path,
   Stage,
   Milestone,
   SubTask,
@@ -37,6 +38,9 @@ async function fetchTable<T>(
 
 export const fetchTracks = () =>
   fetchTable<Track>("tracks", { column: "position" });
+
+export const fetchPaths = () =>
+  fetchTable<Path>("paths", { column: "position" });
 
 export const fetchStages = () =>
   fetchTable<Stage>("stages", { column: "position" });
@@ -87,6 +91,9 @@ export async function fetchProfile(): Promise<Profile> {
 
 export const useTracks = () =>
   useQuery({ queryKey: queryKeys.tracks, queryFn: fetchTracks });
+
+export const usePaths = () =>
+  useQuery({ queryKey: queryKeys.paths, queryFn: fetchPaths });
 
 export const useStages = () =>
   useQuery({ queryKey: queryKeys.stages, queryFn: fetchStages });

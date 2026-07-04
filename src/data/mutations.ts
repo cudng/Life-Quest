@@ -57,6 +57,57 @@ export function useToggleSubTask() {
   });
 }
 
+export interface NewSubTask {
+  id: string;
+  milestone_id: string;
+  title: string;
+  position: number;
+}
+
+export function useAddSubTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewSubTask) => {
+      const { error } = await supabase
+        .from("sub_tasks")
+        .insert({ ...vars, completed: false });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
+    },
+  });
+}
+
+export function useRenameSubTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; title: string }) => {
+      const { error } = await supabase
+        .from("sub_tasks")
+        .update({ title: vars.title })
+        .eq("id", vars.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
+    },
+  });
+}
+
+export function useDeleteSubTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("sub_tasks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
+    },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Roadmap admin: create content (tracks / stages / milestones), edit & delete
 // milestones. Ids are caller-generated slugs (see lib/slug.ts). Each write
@@ -70,9 +121,17 @@ export interface NewTrack {
   position: number;
 }
 
-export interface NewStage {
+export interface NewPath {
   id: string;
   track_id: string;
+  title: string;
+  icon: string | null;
+  position: number;
+}
+
+export interface NewStage {
+  id: string;
+  path_id: string;
   title: string;
   position: number;
 }
@@ -107,6 +166,108 @@ export function useAddTrack() {
   });
 }
 
+export interface TrackUpdate {
+  id: string;
+  title: string;
+  icon: string | null;
+}
+
+export function useUpdateTrack() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title, icon }: TrackUpdate) => {
+      const { error } = await supabase
+        .from("tracks")
+        .update({ title, icon })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tracks });
+    },
+  });
+}
+
+/**
+ * Delete a track. Its paths, stages, milestones and sub_tasks all cascade in
+ * the DB (ON DELETE CASCADE), so this single delete removes the whole track.
+ */
+export function useDeleteTrack() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tracks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.tracks });
+      void qc.invalidateQueries({ queryKey: queryKeys.paths });
+      void qc.invalidateQueries({ queryKey: queryKeys.stages });
+      void qc.invalidateQueries({ queryKey: queryKeys.milestones });
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Paths (a track groups several paths; each path owns its stages/milestones)
+// ---------------------------------------------------------------------------
+
+export function useAddPath() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: NewPath) => {
+      const { error } = await supabase.from("paths").insert(vars);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.paths });
+    },
+  });
+}
+
+export interface PathUpdate {
+  id: string;
+  title: string;
+  icon: string | null;
+}
+
+export function useUpdatePath() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title, icon }: PathUpdate) => {
+      const { error } = await supabase
+        .from("paths")
+        .update({ title, icon })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.paths });
+    },
+  });
+}
+
+/**
+ * Delete a path. Its stages, milestones and sub_tasks all cascade in the DB
+ * (ON DELETE CASCADE), so this single delete removes the whole path.
+ */
+export function useDeletePath() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("paths").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.paths });
+      void qc.invalidateQueries({ queryKey: queryKeys.stages });
+      void qc.invalidateQueries({ queryKey: queryKeys.milestones });
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
+    },
+  });
+}
+
 export function useAddStage() {
   const qc = useQueryClient();
   return useMutation({
@@ -116,6 +277,46 @@ export function useAddStage() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.stages });
+    },
+  });
+}
+
+export interface StageUpdate {
+  id: string;
+  title: string;
+}
+
+export function useUpdateStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title }: StageUpdate) => {
+      const { error } = await supabase
+        .from("stages")
+        .update({ title })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.stages });
+    },
+  });
+}
+
+/**
+ * Delete a stage. Its milestones and their sub_tasks cascade in the DB
+ * (ON DELETE CASCADE), so this single delete removes the whole column.
+ */
+export function useDeleteStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("stages").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.stages });
+      void qc.invalidateQueries({ queryKey: queryKeys.milestones });
+      void qc.invalidateQueries({ queryKey: queryKeys.subTasks });
     },
   });
 }
